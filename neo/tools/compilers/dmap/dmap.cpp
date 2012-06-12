@@ -283,10 +283,6 @@ void Dmap( const idCmdArgs &args ) {
 		} else if ( !idStr::Icmp( s, "noAAS" ) ) {
 			noAAS = true;
 			common->Printf( "noAAS = true\n" );
-		} else if ( !idStr::Icmp( s, "editorOutput" ) ) {
-#ifdef _WIN32
-			com_outputMsg = true;
-#endif
 		} else {
 			break;
 		}
@@ -351,9 +347,6 @@ void Dmap( const idCmdArgs &args ) {
 
 		if ( !noCM ) {
 
-			// make sure the collision model manager is not used by the game
-			cmdSystem->BufferCommandText( CMD_EXEC_NOW, "disconnect" );
-
 			// create the collision map
 			start = Sys_Milliseconds();
 
@@ -367,7 +360,8 @@ void Dmap( const idCmdArgs &args ) {
 
 		if ( !noAAS && !region ) {
 			// create AAS files
-			RunAAS_f( args );
+			common->Warning("AAS generation is disabled in the dmap executable");
+			//RunAAS_f( args );
 		}
 	}
 
@@ -376,13 +370,6 @@ void Dmap( const idCmdArgs &args ) {
 
 	// clear the map plane list
 	dmapGlobals.mapPlanes.Clear();
-
-#ifdef _WIN32
-	if ( com_outputMsg && com_hwndMsg != NULL ) {
-		unsigned int msg = ::RegisterWindowMessage( DMAP_DONE );
-		::PostMessage( com_hwndMsg, msg, 0, 0 );
-	}
-#endif
 }
 
 /*

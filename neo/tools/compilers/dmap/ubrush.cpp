@@ -155,31 +155,6 @@ uBrush_t *CopyBrush (uBrush_t *brush)
 
 
 /*
-================
-DrawBrushList
-================
-*/
-void DrawBrushList (uBrush_t *brush)
-{
-	int		i;
-	side_t	*s;
-
-	GLS_BeginScene ();
-	for ( ; brush ; brush=brush->next)
-	{
-		for (i=0 ; i<brush->numsides ; i++)
-		{
-			s = &brush->sides[i];
-			if (!s->winding)
-				continue;
-			GLS_Winding (s->winding, 0);
-		}
-	}
-	GLS_EndScene ();
-}
-
-
-/*
 =============
 PrintBrush
 =============
@@ -349,39 +324,39 @@ FIXME: use new brush format
 ==================
 */
 void WriteBspBrushMap( const char *name, uBrush_t *list ) {
-	idFile *	f;
+	FILE *	f;
 	side_t *	s;
 	int			i;
 	idWinding *	w;
 
 	common->Printf ("writing %s\n", name);
-	f = fileSystem->OpenFileWrite( name );
+	f = fopen(name, "w");
 
 	if ( !f ) {
 		common->Error( "Can't write %s\b", name);
 	}
 
-	f->Printf( "{\n\"classname\" \"worldspawn\"\n" );
+	fprintf(f, "{\n\"classname\" \"worldspawn\"\n" );
 
 	for ( ; list ; list=list->next )
 	{
-		f->Printf( "{\n" );
+		fprintf(f, "{\n" );
 		for (i=0,s=list->sides ; i<list->numsides ; i++,s++)
 		{
 			w = new idWinding( dmapGlobals.mapPlanes[s->planenum] );
 
-			f->Printf ("( %i %i %i ) ", (int)(*w)[0][0], (int)(*w)[0][1], (int)(*w)[0][2]);
-			f->Printf ("( %i %i %i ) ", (int)(*w)[1][0], (int)(*w)[1][1], (int)(*w)[1][2]);
-			f->Printf ("( %i %i %i ) ", (int)(*w)[2][0], (int)(*w)[2][1], (int)(*w)[2][2]);
+			fprintf (f, "( %i %i %i ) ", (int)(*w)[0][0], (int)(*w)[0][1], (int)(*w)[0][2]);
+			fprintf (f, "( %i %i %i ) ", (int)(*w)[1][0], (int)(*w)[1][1], (int)(*w)[1][2]);
+			fprintf (f, "( %i %i %i ) ", (int)(*w)[2][0], (int)(*w)[2][1], (int)(*w)[2][2]);
 
-			f->Printf ("notexture 0 0 0 1 1\n" );
+			fprintf (f, "notexture 0 0 0 1 1\n" );
 			delete w;
 		}
-		f->Printf ("}\n");
+		fprintf (f, "}\n");
 	}
-	f->Printf ("}\n");
+	fprintf (f, "}\n");
 
-	fileSystem->CloseFile(f);
+	fclose(f);
 
 }
 
