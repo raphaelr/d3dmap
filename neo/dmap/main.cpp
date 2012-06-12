@@ -140,6 +140,11 @@ int Sys_ListFiles( const char *directory, const char *extension, idStrList &list
 	return list.Num();
 }
 
+int Sys_Milliseconds()
+{
+	return time(NULL);
+}
+
 #else
 
 const char *	Sys_DefaultCDPath( void ) { return ""; }
