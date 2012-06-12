@@ -12,11 +12,15 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework\DeclManager.h" />
+    <ClInclude Include="framework\DeclTable.h" />
+    <ClInclude Include="renderer\Material.h" />
     <ClInclude Include="tools\compilers\dmap\dmap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dmap\main.cpp" />
     <ClCompile Include="framework\DeclManager.cpp" />
+    <ClCompile Include="framework\DeclTable.cpp" />
+    <ClCompile Include="renderer\Material.cpp" />
     <ClCompile Include="tools\compilers\dmap\dmap.cpp" />
     <ClCompile Include="tools\compilers\dmap\facebsp.cpp" />
     <ClCompile Include="tools\compilers\dmap\leakfile.cpp" />

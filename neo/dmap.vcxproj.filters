@@ -7,12 +7,21 @@
     <Filter Include="Framework">
       <UniqueIdentifier>{fcc282c6-0d69-40a3-b5ff-400cfccaf997}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer">
+      <UniqueIdentifier>{8fb0aa89-6262-435d-85d7-66feb12ed3d9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\compilers\dmap\dmap.h">
       <Filter>Dmap Compiler</Filter>
     </ClInclude>
     <ClInclude Include="framework\DeclManager.h">
+      <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Material.h">
+      <Filter>Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\DeclTable.h">
       <Filter>Framework</Filter>
     </ClInclude>
   </ItemGroup>
@@ -58,6 +67,12 @@
     </ClCompile>
     <ClCompile Include="dmap\main.cpp" />
     <ClCompile Include="framework\DeclManager.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\Material.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="framework\DeclTable.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
   </ItemGroup>
