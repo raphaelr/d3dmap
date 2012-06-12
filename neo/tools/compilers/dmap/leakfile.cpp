@@ -68,8 +68,7 @@ void LeakFile (tree_t *tree)
 	// write the points to the file
 	//
 	sprintf( filename, "%s.lin", dmapGlobals.mapFileBase );
-	ospath = fileSystem->RelativePathToOSPath( filename );
-	linefile = fopen( ospath, "w" );
+	linefile = fopen( filename, "w" );
 	if ( !linefile ) {
 		common->Error( "Couldn't open %s\n", filename.c_str() );
 	}

@@ -47,7 +47,7 @@ resolved: normals.  otherwise adjacent facet shaded surfaces get their
 
 #endif
 
-static	idFile	*procFile;
+static	FILE	*procFile;
 
 #define	AREANUM_DIFFERENT	-2
 /*
@@ -88,26 +88,26 @@ int	PruneNodes_r( node_t *node ) {
 	return a1;
 }
 
-static void WriteFloat( idFile *f, float v )
+static void WriteFloat( FILE *f, float v )
 {
 	if ( idMath::Fabs(v - idMath::Rint(v)) < 0.001 ) {
-		f->WriteFloatString( "%i ", (int)idMath::Rint(v) );
+		fprintf( f, "%i ", (int)idMath::Rint(v) );
 	}
 	else {
-		f->WriteFloatString( "%f ", v );
+		fprintf( f, "%f ", v );
 	}
 }
 
-void Write1DMatrix( idFile *f, int x, float *m ) {
+void Write1DMatrix( FILE *f, int x, float *m ) {
 	int		i;
 
-	f->WriteFloatString( "( " );
+	fprintf( f, "( " );
 
 	for ( i = 0; i < x; i++ ) {
 		WriteFloat( f, m[i] );
 	}
 
-	f->WriteFloatString( ") " );
+	fprintf( f, ") " );
 }
 
 static int CountUniqueShaders( optimizeGroup_t *groups ) {
@@ -265,7 +265,7 @@ static void WriteUTriangles( const srfTriangles_t *uTris ) {
 	int			i;
 
 	// emit this chain
-	procFile->WriteFloatString( "/* numVerts = */ %i /* numIndexes = */ %i\n", 
+	fprintf( procFile, "/* numVerts = */ %i /* numIndexes = */ %i\n", 
 		uTris->numVerts, uTris->numIndexes );
 
 	// verts
@@ -288,25 +288,25 @@ static void WriteUTriangles( const srfTriangles_t *uTris ) {
 
 		if ( ++col == 3 ) {
 			col = 0;
-			procFile->WriteFloatString( "\n" );
+			fprintf( procFile, "\n" );
 		}
 	}
 	if ( col != 0 ) {
-		procFile->WriteFloatString( "\n" );
+		fprintf( procFile, "\n" );
 	}
 
 	// indexes
 	col = 0;
 	for ( i = 0 ; i < uTris->numIndexes ; i++ ) {
-		procFile->WriteFloatString( "%i ", uTris->indexes[i] );
+		fprintf( procFile, "%i ", uTris->indexes[i] );
 
 		if ( ++col == 18 ) {
 			col = 0;
-			procFile->WriteFloatString( "\n" );
+			fprintf( procFile, "\n" );
 		}
 	}
 	if ( col != 0 ) {
-		procFile->WriteFloatString( "\n" );
+		fprintf( procFile, "\n" );
 	}
 }
 
@@ -323,7 +323,7 @@ static void WriteShadowTriangles( const srfTriangles_t *tri ) {
 	int			i;
 
 	// emit this chain
-	procFile->WriteFloatString( "/* numVerts = */ %i /* noCaps = */ %i /* noFrontCaps = */ %i /* numIndexes = */ %i /* planeBits = */ %i\n", 
+	fprintf( procFile, "/* numVerts = */ %i /* noCaps = */ %i /* noFrontCaps = */ %i /* numIndexes = */ %i /* planeBits = */ %i\n", 
 		tri->numVerts, tri->numShadowIndexesNoCaps, tri->numShadowIndexesNoFrontCaps, tri->numIndexes, tri->shadowCapPlaneBits );
 
 	// verts
@@ -333,25 +333,25 @@ static void WriteShadowTriangles( const srfTriangles_t *tri ) {
 
 		if ( ++col == 5 ) {
 			col = 0;
-			procFile->WriteFloatString( "\n" );
+			fprintf( procFile, "\n" );
 		}
 	}
 	if ( col != 0 ) {
-		procFile->WriteFloatString( "\n" );
+		fprintf( procFile, "\n" );
 	}
 
 	// indexes
 	col = 0;
 	for ( i = 0 ; i < tri->numIndexes ; i++ ) {
-		procFile->WriteFloatString( "%i ", tri->indexes[i] );
+		fprintf( procFile, "%i ", tri->indexes[i] );
 
 		if ( ++col == 18 ) {
 			col = 0;
-			procFile->WriteFloatString( "\n" );
+			fprintf( procFile, "\n" );
 		}
 	}
 	if ( col != 0 ) {
-		procFile->WriteFloatString( "\n" );
+		fprintf( procFile, "\n" );
 	}
 }
 
@@ -406,7 +406,7 @@ typedef struct interactionTris_s {
 
 
 	if ( entityNum == 0 ) {
-		procFile->WriteFloatString( "model { /* name = */ \"_area%i\" /* numSurfaces = */ %i\n\n", 
+		fprintf( procFile, "model { /* name = */ \"_area%i\" /* numSurfaces = */ %i\n\n", 
 			areaNum, numSurfaces );
 	} else {
 		const char *name;
@@ -415,7 +415,7 @@ typedef struct interactionTris_s {
 		if ( !name[0] ) {
 			common->Error( "Entity %i has surfaces, but no name key", entityNum );
 		}
-		procFile->WriteFloatString( "model { /* name = */ \"%s\" /* numSurfaces = */ %i\n\n", 
+		fprintf( procFile, "model { /* name = */ \"%s\" /* numSurfaces = */ %i\n\n", 
 			name, numSurfaces );
 	}
 
@@ -476,9 +476,9 @@ typedef struct interactionTris_s {
 			common->Error( "WriteOutputSurfaces: surfaceNum >= numSurfaces" );
 		}
 
-		procFile->WriteFloatString( "/* surface %i */ { ", surfaceNum );
+		fprintf( procFile, "/* surface %i */ { ", surfaceNum );
 		surfaceNum++;
-		procFile->WriteFloatString( "\"%s\" ", ambient->material->GetName() );
+		fprintf( procFile, "\"%s\" ", ambient->material->GetName() );
 
 		uTri = ShareMapTriVerts( ambient );
 		FreeTriList( ambient );
@@ -487,10 +487,10 @@ typedef struct interactionTris_s {
 		WriteUTriangles( uTri );
 		R_FreeStaticTriSurf( uTri );
 
-		procFile->WriteFloatString( "}\n\n" );
+		fprintf( procFile, "}\n\n" );
 	}
 
-	procFile->WriteFloatString( "}\n\n" );
+	fprintf( procFile, "}\n\n" );
 }
 
 /*
@@ -507,7 +507,7 @@ static void WriteNode_r( node_t *node ) {
 	if ( node->planenum == PLANENUM_LEAF ) {
 		// we shouldn't get here unless the entire world
 		// was a single leaf
-		procFile->WriteFloatString( "/* node 0 */ ( 0 0 0 0 ) -1 -1\n" );
+		fprintf( procFile, "/* node 0 */ ( 0 0 0 0 ) -1 -1\n" );
 		return;
 	}
 
@@ -521,9 +521,9 @@ static void WriteNode_r( node_t *node ) {
 
 	plane = &dmapGlobals.mapPlanes[node->planenum];
 
-	procFile->WriteFloatString( "/* node %i */ ", node->nodeNumber  );
+	fprintf( procFile, "/* node %i */ ", node->nodeNumber  );
 	Write1DMatrix( procFile, 4, plane->ToFloatPtr() );
-	procFile->WriteFloatString( "%i %i\n", child[0], child[1] );
+	fprintf( procFile, "%i %i\n", child[0], child[1] );
 
 	if ( child[0] > 0 ) {
 		WriteNode_r( node->children[0] );
@@ -558,14 +558,14 @@ static void WriteOutputNodes( node_t *node ) {
 	numNodes = NumberNodes_r( node, 0 );
 
 	// output
-	procFile->WriteFloatString( "nodes { /* numNodes = */ %i\n\n", numNodes );
-	procFile->WriteFloatString( "/* node format is: ( planeVector ) positiveChild negativeChild */\n" );
-	procFile->WriteFloatString( "/* a child number of 0 is an opaque, solid area */\n" );
-	procFile->WriteFloatString( "/* negative child numbers are areas: (-1-child) */\n" );
+	fprintf( procFile, "nodes { /* numNodes = */ %i\n\n", numNodes );
+	fprintf( procFile, "/* node format is: ( planeVector ) positiveChild negativeChild */\n" );
+	fprintf( procFile, "/* a child number of 0 is an opaque, solid area */\n" );
+	fprintf( procFile, "/* negative child numbers are areas: (-1-child) */\n" );
 
 	WriteNode_r( node );
 
-	procFile->WriteFloatString( "}\n\n" );
+	fprintf( procFile, "}\n\n" );
 }
 
 /*
@@ -578,20 +578,20 @@ static void WriteOutputPortals( uEntity_t *e ) {
 	interAreaPortal_t	*iap;
 	idWinding			*w;
 
-	procFile->WriteFloatString( "interAreaPortals { /* numAreas = */ %i /* numIAP = */ %i\n\n", 
+	fprintf( procFile, "interAreaPortals { /* numAreas = */ %i /* numIAP = */ %i\n\n", 
 		e->numAreas, numInterAreaPortals );
-	procFile->WriteFloatString( "/* interAreaPortal format is: numPoints positiveSideArea negativeSideArea ( point) ... */\n" );
+	fprintf( procFile, "/* interAreaPortal format is: numPoints positiveSideArea negativeSideArea ( point) ... */\n" );
 	for ( i = 0 ; i < numInterAreaPortals ; i++ ) {
 		iap = &interAreaPortals[i];
 		w = iap->side->winding;
-		procFile->WriteFloatString("/* iap %i */ %i %i %i ", i, w->GetNumPoints(), iap->area0, iap->area1 );
+		fprintf( procFile,"/* iap %i */ %i %i %i ", i, w->GetNumPoints(), iap->area0, iap->area1 );
 		for ( j = 0 ; j < w->GetNumPoints() ; j++ ) {
 			Write1DMatrix( procFile, 3, (*w)[j].ToFloatPtr() );
 		}
-		procFile->WriteFloatString("\n" );
+		fprintf( procFile,"\n" );
 	}
 
-	procFile->WriteFloatString( "}\n\n" );
+	fprintf( procFile, "}\n\n" );
 }
 
 
@@ -645,12 +645,13 @@ void WriteOutputFile( void ) {
 
 	common->Printf( "writing %s\n", qpath.c_str() );
 	// _D3XP used fs_cdpath
-	procFile = fileSystem->OpenFileWrite( qpath, "fs_devpath" );
+	procFile = fopen( qpath, "w" );
+	
 	if ( !procFile ) {
 		common->Error( "Error opening %s", qpath.c_str() );
 	}
 
-	procFile->WriteFloatString( "%s\n\n", PROC_FILE_ID );
+	fprintf( procFile, "%s\n\n", PROC_FILE_ID );
 
 	// write the entity models and information, writing entities first
 	for ( i=dmapGlobals.num_entities - 1 ; i >= 0 ; i-- ) {
@@ -670,13 +671,13 @@ void WriteOutputFile( void ) {
 			continue;
 		}
 
-		procFile->WriteFloatString( "shadowModel { /* name = */ \"_prelight_%s\"\n\n", light->name );
+		fprintf( procFile, "shadowModel { /* name = */ \"_prelight_%s\"\n\n", light->name );
 		WriteShadowTriangles( light->shadowTris );
-		procFile->WriteFloatString( "}\n\n" );
+		fprintf( procFile, "}\n\n" );
 
 		R_FreeStaticTriSurf( light->shadowTris );
 		light->shadowTris = NULL;
 	}
 
-	fileSystem->CloseFile( procFile );
+	fclose(procFile);
 }
