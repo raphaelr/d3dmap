@@ -207,12 +207,7 @@ public:
 	virtual void				WritePrecacheCommands( idFile *f );
 
 	virtual const idMaterial *		FindMaterial( const char *name, bool makeDefault = true );
-	virtual const idDeclSkin *		FindSkin( const char *name, bool makeDefault = true );
-	virtual const idSoundShader *	FindSound( const char *name, bool makeDefault = true );
-
 	virtual const idMaterial *		MaterialByIndex( int index, bool forceParse = true );
-	virtual const idDeclSkin *		SkinByIndex( int index, bool forceParse = true );
-	virtual const idSoundShader *	SoundByIndex( int index, bool forceParse = true );
 
 public:
 	static void					MakeNameCanonical( const char *name, char *result, int maxLength );
@@ -235,15 +230,11 @@ private:
 	int							indent;			// for MediaPrint
 	bool						insideLevelLoad;
 
-	static idCVar				decl_show;
-
 private:
 	static void					ListDecls_f( const idCmdArgs &args );
 	static void					ReloadDecls_f( const idCmdArgs &args );
 	static void					TouchDecl_f( const idCmdArgs &args );
 };
-
-idCVar idDeclManagerLocal::decl_show( "decl_show", "0", CVAR_SYSTEM, "set to 1 to print parses, 2 to also print references", 0, 2, idCmdSystem::ArgCompletion_Integer<0,2> );
 
 idDeclManagerLocal	declManagerLocal;
 idDeclManager *		declManager = &declManagerLocal;
@@ -576,18 +567,7 @@ ForceReload will cause it to reload even if the timestamp hasn't changed
 ================
 */
 void idDeclFile::Reload( bool force ) {
-	// check for an unchanged timestamp
-	if ( !force && timestamp != 0 ) {
-		ID_TIME_T	testTimeStamp;
-		fileSystem->ReadFile( fileName, NULL, &testTimeStamp );
-
-		if ( testTimeStamp == timestamp ) {
-			return;
-		}
-	}
-
-	// parse the text
-	LoadAndParse();
+	terminate();
 }
 
 /*
@@ -613,7 +593,24 @@ int idDeclFile::LoadAndParse() {
 
 	// load the text
 	common->DPrintf( "...loading '%s'\n", fileName.c_str() );
-	length = fileSystem->ReadFile( fileName, (void **)&buffer, &timestamp );
+
+	FILE *f = fopen( fileName, "r" );
+	if(!f) {
+		common->FatalError( "couldn't load %s", fileName.c_str() );
+	}
+
+	fseek( f, 0, SEEK_END );
+	length = ftell( f );
+	fseek( f, 0, SEEK_SET );
+	buffer = (char*) malloc(length);
+	for(int didRead = 0; didRead < length; ) {
+		int result = fread(buffer + didRead, 1, length - didRead, f);
+		if(result == -1) {
+			common->FatalError( "couldn't load %s", fileName.c_str() );
+		}
+		didRead += result;
+	}
+
 	if ( length == -1 ) {
 		common->FatalError( "couldn't load %s", fileName.c_str() );
 		return 0;
@@ -805,60 +802,10 @@ void idDeclManagerLocal::Init( void ) {
 	// decls used throughout the engine
 	RegisterDeclType( "table",				DECL_TABLE,			idDeclAllocator<idDeclTable> );
 	RegisterDeclType( "material",			DECL_MATERIAL,		idDeclAllocator<idMaterial> );
-	RegisterDeclType( "skin",				DECL_SKIN,			idDeclAllocator<idDeclSkin> );
-	RegisterDeclType( "sound",				DECL_SOUND,			idDeclAllocator<idSoundShader> );
-
-	RegisterDeclType( "entityDef",			DECL_ENTITYDEF,		idDeclAllocator<idDeclEntityDef> );
-	RegisterDeclType( "mapDef",				DECL_MAPDEF,		idDeclAllocator<idDeclEntityDef> );
-	RegisterDeclType( "fx",					DECL_FX,			idDeclAllocator<idDeclFX> );
-	RegisterDeclType( "particle",			DECL_PARTICLE,		idDeclAllocator<idDeclParticle> );
-	RegisterDeclType( "articulatedFigure",	DECL_AF,			idDeclAllocator<idDeclAF> );
-	RegisterDeclType( "pda",				DECL_PDA,			idDeclAllocator<idDeclPDA> );
-	RegisterDeclType( "email",				DECL_EMAIL,			idDeclAllocator<idDeclEmail> );
-	RegisterDeclType( "video",				DECL_VIDEO,			idDeclAllocator<idDeclVideo> );
-	RegisterDeclType( "audio",				DECL_AUDIO,			idDeclAllocator<idDeclAudio> );
 
 	RegisterDeclFolder( "materials",		".mtr",				DECL_MATERIAL );
 	RegisterDeclFolder( "skins",			".skin",			DECL_SKIN );
 	RegisterDeclFolder( "sound",			".sndshd",			DECL_SOUND );
-
-	// add console commands
-	cmdSystem->AddCommand( "listDecls", ListDecls_f, CMD_FL_SYSTEM, "lists all decls" );
-
-	cmdSystem->AddCommand( "reloadDecls", ReloadDecls_f, CMD_FL_SYSTEM, "reloads decls" );
-	cmdSystem->AddCommand( "touch", TouchDecl_f, CMD_FL_SYSTEM, "touches a decl" );
-
-	cmdSystem->AddCommand( "listTables", idListDecls_f<DECL_TABLE>, CMD_FL_SYSTEM, "lists tables", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listMaterials", idListDecls_f<DECL_MATERIAL>, CMD_FL_SYSTEM, "lists materials", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listSkins", idListDecls_f<DECL_SKIN>, CMD_FL_SYSTEM, "lists skins", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listSoundShaders", idListDecls_f<DECL_SOUND>, CMD_FL_SYSTEM, "lists sound shaders", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-
-	cmdSystem->AddCommand( "listEntityDefs", idListDecls_f<DECL_ENTITYDEF>, CMD_FL_SYSTEM, "lists entity defs", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listFX", idListDecls_f<DECL_FX>, CMD_FL_SYSTEM, "lists FX systems", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listParticles", idListDecls_f<DECL_PARTICLE>, CMD_FL_SYSTEM, "lists particle systems", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listAF", idListDecls_f<DECL_AF>, CMD_FL_SYSTEM, "lists articulated figures", idCmdSystem::ArgCompletion_String<listDeclStrings>);
-
-	cmdSystem->AddCommand( "listPDAs", idListDecls_f<DECL_PDA>, CMD_FL_SYSTEM, "lists PDAs", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listEmails", idListDecls_f<DECL_EMAIL>, CMD_FL_SYSTEM, "lists Emails", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listVideos", idListDecls_f<DECL_VIDEO>, CMD_FL_SYSTEM, "lists Videos", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-	cmdSystem->AddCommand( "listAudios", idListDecls_f<DECL_AUDIO>, CMD_FL_SYSTEM, "lists Audios", idCmdSystem::ArgCompletion_String<listDeclStrings> );
-
-	cmdSystem->AddCommand( "printTable", idPrintDecls_f<DECL_TABLE>, CMD_FL_SYSTEM, "prints a table", idCmdSystem::ArgCompletion_Decl<DECL_TABLE> );
-	cmdSystem->AddCommand( "printMaterial", idPrintDecls_f<DECL_MATERIAL>, CMD_FL_SYSTEM, "prints a material", idCmdSystem::ArgCompletion_Decl<DECL_MATERIAL> );
-	cmdSystem->AddCommand( "printSkin", idPrintDecls_f<DECL_SKIN>, CMD_FL_SYSTEM, "prints a skin", idCmdSystem::ArgCompletion_Decl<DECL_SKIN> );
-	cmdSystem->AddCommand( "printSoundShader", idPrintDecls_f<DECL_SOUND>, CMD_FL_SYSTEM, "prints a sound shader", idCmdSystem::ArgCompletion_Decl<DECL_SOUND> );
-
-	cmdSystem->AddCommand( "printEntityDef", idPrintDecls_f<DECL_ENTITYDEF>, CMD_FL_SYSTEM, "prints an entity def", idCmdSystem::ArgCompletion_Decl<DECL_ENTITYDEF> );
-	cmdSystem->AddCommand( "printFX", idPrintDecls_f<DECL_FX>, CMD_FL_SYSTEM, "prints an FX system", idCmdSystem::ArgCompletion_Decl<DECL_FX> );
-	cmdSystem->AddCommand( "printParticle", idPrintDecls_f<DECL_PARTICLE>, CMD_FL_SYSTEM, "prints a particle system", idCmdSystem::ArgCompletion_Decl<DECL_PARTICLE> );
-	cmdSystem->AddCommand( "printAF", idPrintDecls_f<DECL_AF>, CMD_FL_SYSTEM, "prints an articulated figure", idCmdSystem::ArgCompletion_Decl<DECL_AF> );
-
-	cmdSystem->AddCommand( "printPDA", idPrintDecls_f<DECL_PDA>, CMD_FL_SYSTEM, "prints an PDA", idCmdSystem::ArgCompletion_Decl<DECL_PDA> );
-	cmdSystem->AddCommand( "printEmail", idPrintDecls_f<DECL_EMAIL>, CMD_FL_SYSTEM, "prints an Email", idCmdSystem::ArgCompletion_Decl<DECL_EMAIL> );
-	cmdSystem->AddCommand( "printVideo", idPrintDecls_f<DECL_VIDEO>, CMD_FL_SYSTEM, "prints a Audio", idCmdSystem::ArgCompletion_Decl<DECL_VIDEO> );
-	cmdSystem->AddCommand( "printAudio", idPrintDecls_f<DECL_AUDIO>, CMD_FL_SYSTEM, "prints an Video", idCmdSystem::ArgCompletion_Decl<DECL_AUDIO> );
-
-	cmdSystem->AddCommand( "listHuffmanFrequencies", ListHuffmanFrequencies_f, CMD_FL_SYSTEM, "lists decl text character frequencies" );
 
 	common->Printf( "------------------------------\n" );
 }
@@ -977,7 +924,6 @@ void idDeclManagerLocal::RegisterDeclFolder( const char *folder, const char *ext
 	int i, j;
 	idStr fileName;
 	idDeclFolder *declFolder;
-	idFileList *fileList;
 	idDeclFile *df;
 
 	// check whether this folder / extension combination already exists
@@ -997,11 +943,12 @@ void idDeclManagerLocal::RegisterDeclFolder( const char *folder, const char *ext
 	}
 
 	// scan for decl files
-	fileList = fileSystem->ListFiles( declFolder->folder, declFolder->extension, true );
+	idList<idStr> fileList;
+	Sys_ListFiles( declFolder->folder, declFolder->extension, fileList );
 
 	// load and parse decl files
-	for ( i = 0; i < fileList->GetNumFiles(); i++ ) {
-		fileName = declFolder->folder + "/" + fileList->GetFile( i );
+	for ( i = 0; i < fileList.Num(); i++ ) {
+		fileName = declFolder->folder + "/" + fileList[i];
 
 		// check whether this file has already been loaded
 		for ( j = 0; j < loadedFiles.Num(); j++ ) {
@@ -1017,8 +964,6 @@ void idDeclManagerLocal::RegisterDeclFolder( const char *folder, const char *ext
 		}
 		df->LoadAndParse();
 	}
-
-	fileSystem->FreeFileList( fileList );
 }
 
 /*
@@ -1473,9 +1418,6 @@ This is just used to nicely indent media caching prints
 ===================
 */
 void idDeclManagerLocal::MediaPrint( const char *fmt, ... ) {
-	if ( !decl_show.GetInteger() ) {
-		return;
-	}
 	for ( int i = 0 ; i < indent ; i++ ) {
 		common->Printf( "    " );
 	}
@@ -1530,24 +1472,6 @@ const idMaterial *idDeclManagerLocal::MaterialByIndex( int index, bool forcePars
 }
 
 /********************************************************************/
-
-const idDeclSkin *idDeclManagerLocal::FindSkin( const char *name, bool makeDefault ) {
-	return static_cast<const idDeclSkin *>( FindType( DECL_SKIN, name, makeDefault ) );
-}
-
-const idDeclSkin *idDeclManagerLocal::SkinByIndex( int index, bool forceParse ) {
-	return static_cast<const idDeclSkin *>( DeclByIndex( DECL_SKIN, index, forceParse ) );
-}
-
-/********************************************************************/
-
-const idSoundShader *idDeclManagerLocal::FindSound( const char *name, bool makeDefault ) {
-	return static_cast<const idSoundShader *>( FindType( DECL_SOUND, name, makeDefault ) );
-}
-
-const idSoundShader *idDeclManagerLocal::SoundByIndex( int index, bool forceParse ) {
-	return static_cast<const idSoundShader *>( DeclByIndex( DECL_SOUND, index, forceParse ) );
-}
 
 /*
 ===================
@@ -1639,11 +1563,7 @@ void idDeclManagerLocal::ReloadDecls_f( const idCmdArgs &args ) {
 		common->Printf( "reloading changed decl files:\n" );
 	}
 
-	soundSystem->SetMute( true );
-
 	declManagerLocal.Reload( force );
-
-	soundSystem->SetMute( false );
 }
 
 /*
@@ -1706,9 +1626,6 @@ idDeclLocal *idDeclManagerLocal::FindTypeWithoutParsing( declType_t type, const 
 	for ( i = hashTables[typeIndex].First( hash ); i >= 0; i = hashTables[typeIndex].Next( i ) ) {
 		if ( linearLists[typeIndex][i]->name.Icmp( canonicalName ) == 0 ) {
 			// only print these when decl_show is set to 2, because it can be a lot of clutter
-			if ( decl_show.GetInteger() > 1 ) {
-				MediaPrint( "referencing %s %s\n", declTypes[ type ]->typeName.c_str(), name );
-			}
 			return linearLists[typeIndex][i];
 		}
 	}
@@ -1940,82 +1857,7 @@ idDeclLocal::ReplaceSourceFileText
 =================
 */
 bool idDeclLocal::ReplaceSourceFileText( void ) {
-	int oldFileLength, newFileLength;
-	char *buffer;
-	idFile *file;
-
-	common->Printf( "Writing \'%s\' to \'%s\'...\n", GetName(), GetFileName() );
-
-	if ( sourceFile == &declManagerLocal.implicitDecls ) {
-		common->Warning( "Can't save implicit declaration %s.", GetName() );
-		return false;
-	}
-
-	// get length and allocate buffer to hold the file
-	oldFileLength = sourceFile->fileSize;
-	newFileLength = oldFileLength - sourceTextLength + textLength;
-	buffer = (char *) Mem_Alloc( Max( newFileLength, oldFileLength ) );
-
-	// read original file
-	if ( sourceFile->fileSize ) {
-
-		file = fileSystem->OpenFileRead( GetFileName() );
-		if ( !file ) {
-			Mem_Free( buffer );
-			common->Warning( "Couldn't open %s for reading.", GetFileName() );
-			return false;
-		}
-
-		if ( file->Length() != sourceFile->fileSize || file->Timestamp() != sourceFile->timestamp ) {
-			Mem_Free( buffer );
-			common->Warning( "The file %s has been modified outside of the engine.", GetFileName() );
-			return false;
-		}
-
-		file->Read( buffer, oldFileLength );
-		fileSystem->CloseFile( file );
-
-		if ( MD5_BlockChecksum( buffer, oldFileLength ) != sourceFile->checksum ) {
-			Mem_Free( buffer );
-			common->Warning( "The file %s has been modified outside of the engine.", GetFileName() );
-			return false;
-		}
-	}
-
-	// insert new text
-	char *declText = (char *) _alloca( textLength + 1 );
-	GetText( declText );
-	memmove( buffer + sourceTextOffset + textLength, buffer + sourceTextOffset + sourceTextLength, oldFileLength - sourceTextOffset - sourceTextLength );
-	memcpy( buffer + sourceTextOffset, declText, textLength );
-
-	// write out new file
-	file = fileSystem->OpenFileWrite( GetFileName(), "fs_devpath" );
-	if ( !file ) {
-		Mem_Free( buffer );
-		common->Warning( "Couldn't open %s for writing.", GetFileName() );
-		return false;
-	}
-	file->Write( buffer, newFileLength );
-	fileSystem->CloseFile( file );
-
-	// set new file size, checksum and timestamp
-	sourceFile->fileSize = newFileLength;
-	sourceFile->checksum = MD5_BlockChecksum( buffer, newFileLength );
-	fileSystem->ReadFile( GetFileName(), NULL, &sourceFile->timestamp );
-
-	// free buffer
-	Mem_Free( buffer );
-
-	// move all decls in the same file
-	for ( idDeclLocal *decl = sourceFile->decls; decl; decl = decl->nextInFile ) {
-		if (decl->sourceTextOffset > sourceTextOffset) {
-			decl->sourceTextOffset += textLength - sourceTextLength;
-		}
-	}
-
-	// set new size of text in source file
-	sourceTextLength = textLength;
-
+	terminate();
 	return true;
 }
 
@@ -2025,19 +1867,6 @@ idDeclLocal::SourceFileChanged
 =================
 */
 bool idDeclLocal::SourceFileChanged( void ) const {
-	int newLength;
-	ID_TIME_T newTimestamp;
-
-	if ( sourceFile->fileSize <= 0 ) {
-		return false;
-	}
-
-	newLength = fileSystem->ReadFile( GetFileName(), NULL, &newTimestamp );
-
-	if ( newLength != sourceFile->fileSize || newTimestamp != sourceFile->timestamp ) {
-		return true;
-	}
-
 	return false;
 }
 

@@ -312,12 +312,7 @@ public:
 
 									// Convenience functions for specific types.
 	virtual	const idMaterial *		FindMaterial( const char *name, bool makeDefault = true ) = 0;
-	virtual const idDeclSkin *		FindSkin( const char *name, bool makeDefault = true ) = 0;
-	virtual const idSoundShader *	FindSound( const char *name, bool makeDefault = true ) = 0;
-
 	virtual const idMaterial *		MaterialByIndex( int index, bool forceParse = true ) = 0;
-	virtual const idDeclSkin *		SkinByIndex( int index, bool forceParse = true ) = 0;
-	virtual const idSoundShader *	SoundByIndex( int index, bool forceParse = true ) = 0;
 };
 
 extern idDeclManager *		declManager;

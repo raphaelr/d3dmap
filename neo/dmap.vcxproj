@@ -11,10 +11,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="framework\DeclManager.h" />
     <ClInclude Include="tools\compilers\dmap\dmap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dmap\main.cpp" />
+    <ClCompile Include="framework\DeclManager.cpp" />
     <ClCompile Include="tools\compilers\dmap\dmap.cpp" />
     <ClCompile Include="tools\compilers\dmap\facebsp.cpp" />
     <ClCompile Include="tools\compilers\dmap\leakfile.cpp" />

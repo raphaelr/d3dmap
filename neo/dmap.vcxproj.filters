@@ -4,10 +4,16 @@
     <Filter Include="Dmap Compiler">
       <UniqueIdentifier>{eab020ac-bab2-4057-bec2-695b9a2116d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Framework">
+      <UniqueIdentifier>{fcc282c6-0d69-40a3-b5ff-400cfccaf997}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\compilers\dmap\dmap.h">
       <Filter>Dmap Compiler</Filter>
+    </ClInclude>
+    <ClInclude Include="framework\DeclManager.h">
+      <Filter>Framework</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -51,5 +57,8 @@
       <Filter>Dmap Compiler</Filter>
     </ClCompile>
     <ClCompile Include="dmap\main.cpp" />
+    <ClCompile Include="framework\DeclManager.cpp">
+      <Filter>Framework</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
