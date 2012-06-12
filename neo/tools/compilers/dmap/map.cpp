@@ -58,6 +58,8 @@ static	int		c_areaportals;
 
 static	uEntity_t	*uEntity;
 
+static void ParseSpawnArgsToRenderLight( const idDict *args, renderLight_t *renderLight );
+
 // brushes are parsed into a temporary array of sides,
 // which will have duplicates removed before the final brush is allocated
 static	uBrush_t	*buildBrush;
@@ -458,7 +460,7 @@ static void CreateMapLight( const idMapEntity *mapEnt ) {
 	// parse parms exactly as the game do
 	// use the game's epair parsing code so
 	// we can use the same renderLight generation
-	gameEdit->ParseSpawnArgsToRenderLight( &mapEnt->epairs, &light->def.parms );
+	ParseSpawnArgsToRenderLight( &mapEnt->epairs, &light->def.parms );
 
 	R_DeriveLightData( &light->def );
 
@@ -503,6 +505,85 @@ static void CreateMapLights( const idMapFile *dmapFile ) {
 
 	}
 
+}
+
+void ParseSpawnArgsToRenderLight( const idDict *args, renderLight_t *renderLight ) {
+	bool	gotTarget, gotUp, gotRight;
+	const char	*texture;
+	idVec3	color;
+
+	memset( renderLight, 0, sizeof( *renderLight ) );
+
+	if (!args->GetVector("light_origin", "", renderLight->origin)) {
+		args->GetVector( "origin", "", renderLight->origin );
+	}
+
+	gotTarget = args->GetVector( "light_target", "", renderLight->target );
+	gotUp = args->GetVector( "light_up", "", renderLight->up );
+	gotRight = args->GetVector( "light_right", "", renderLight->right );
+	args->GetVector( "light_start", "0 0 0", renderLight->start );
+	if ( !args->GetVector( "light_end", "", renderLight->end ) ) {
+		renderLight->end = renderLight->target;
+	}
+
+	// we should have all of the target/right/up or none of them
+	if ( ( gotTarget || gotUp || gotRight ) != ( gotTarget && gotUp && gotRight ) ) {
+		common->Error( "Light at (%f,%f,%f) has bad target info\n",
+			renderLight->origin[0], renderLight->origin[1], renderLight->origin[2] );
+		return;
+	}
+
+	if ( !gotTarget ) {
+		renderLight->pointLight = true;
+
+		// allow an optional relative center of light and shadow offset
+		args->GetVector( "light_center", "0 0 0", renderLight->lightCenter );
+
+		// create a point light
+		if (!args->GetVector( "light_radius", "300 300 300", renderLight->lightRadius ) ) {
+			float radius;
+
+			args->GetFloat( "light", "300", radius );
+			renderLight->lightRadius[0] = renderLight->lightRadius[1] = renderLight->lightRadius[2] = radius;
+		}
+	}
+
+	// get the rotation matrix in either full form, or single angle form
+	idAngles angles;
+	idMat3 mat;
+	if ( !args->GetMatrix( "light_rotation", "1 0 0 0 1 0 0 0 1", mat ) ) {
+		if ( !args->GetMatrix( "rotation", "1 0 0 0 1 0 0 0 1", mat ) ) {
+	   		args->GetFloat( "angle", "0", angles[ 1 ] );
+   			angles[ 0 ] = 0;
+			angles[ 1 ] = idMath::AngleNormalize360( angles[ 1 ] );
+	   		angles[ 2 ] = 0;
+			mat = angles.ToMat3();
+		}
+	}
+
+	// fix degenerate identity matrices
+	mat[0].FixDegenerateNormal();
+	mat[1].FixDegenerateNormal();
+	mat[2].FixDegenerateNormal();
+
+	renderLight->axis = mat;
+
+	// check for other attributes
+	args->GetVector( "_color", "1 1 1", color );
+	renderLight->shaderParms[ SHADERPARM_RED ]		= color[0];
+	renderLight->shaderParms[ SHADERPARM_GREEN ]	= color[1];
+	renderLight->shaderParms[ SHADERPARM_BLUE ]		= color[2];
+	args->GetFloat( "shaderParm3", "1", renderLight->shaderParms[ SHADERPARM_TIMESCALE ] );
+	args->GetFloat( "shaderParm5", "0", renderLight->shaderParms[5] );
+	args->GetFloat( "shaderParm6", "0", renderLight->shaderParms[6] );
+	args->GetFloat( "shaderParm7", "0", renderLight->shaderParms[ SHADERPARM_MODE ] );
+	args->GetBool( "noshadows", "0", renderLight->noShadows );
+	args->GetBool( "nospecular", "0", renderLight->noSpecular );
+	args->GetBool( "parallel", "0", renderLight->parallel );
+
+	args->GetString( "texture", "lights/squarelight1", &texture );
+	// allow this to be NULL
+	renderLight->shader = declManager->FindMaterial( texture, false );
 }
 
 /*
