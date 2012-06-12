@@ -1,4 +1,6 @@
 build
+neo/ipch
+
 *.suo
 *.user
 _ReSharper.*
