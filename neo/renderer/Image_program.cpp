@@ -84,7 +84,7 @@ static void R_HeightmapToNormalMap( byte *data, int width, int height, float sca
 
 	// copy and convert to grey scale
 	j = width * height;
-	depth = (byte *)R_StaticAlloc( j );
+	depth = (byte *)malloc( j );
 	for ( i = 0 ; i < j ; i++ ) {
 		depth[i] = ( data[i*4] + data[i*4+1] + data[i*4+2] ) / 3;
 	}
@@ -131,7 +131,7 @@ static void R_HeightmapToNormalMap( byte *data, int width, int height, float sca
 	}
 
 
-	R_StaticFree( depth );
+	free( depth );
 }
 
 
@@ -193,61 +193,6 @@ static void R_InvertColor( byte *data, int width, int height ) {
 
 
 /*
-===================
-R_AddNormalMaps
-
-===================
-*/
-static void R_AddNormalMaps( byte *data1, int width1, int height1, byte *data2, int width2, int height2 ) {
-	int		i, j;
-	byte	*newMap;
-
-	// resample pic2 to the same size as pic1
-	if ( width2 != width1 || height2 != height1 ) {
-		newMap = R_Dropsample( data2, width2, height2, width1, height1 );
-		data2 = newMap;
-	} else {
-		newMap = NULL;
-	}
-
-	// add the normal change from the second and renormalize
-	for ( i = 0 ; i < height1 ; i++ ) {
-		for ( j = 0 ; j < width1 ; j++ ) {
-			byte	*d1, *d2;
-			idVec3	n;
-			float   len;
-
-			d1 = data1 + ( i * width1 + j ) * 4;
-			d2 = data2 + ( i * width1 + j ) * 4;
-
-			n[0] = ( d1[0] - 128 ) / 127.0;
-			n[1] = ( d1[1] - 128 ) / 127.0;
-			n[2] = ( d1[2] - 128 ) / 127.0;
-
-			// There are some normal maps that blend to 0,0,0 at the edges
-			// this screws up compression, so we try to correct that here by instead fading it to 0,0,1
-			len = n.LengthFast();
-			if ( len < 1.0f ) {
-				n[2] = idMath::Sqrt(1.0 - (n[0]*n[0]) - (n[1]*n[1]));
-			}
-
-			n[0] += ( d2[0] - 128 ) / 127.0;
-			n[1] += ( d2[1] - 128 ) / 127.0;
-			n.Normalize();
-
-			d1[0] = (byte)(n[0] * 127 + 128);
-			d1[1] = (byte)(n[1] * 127 + 128);
-			d1[2] = (byte)(n[2] * 127 + 128);
-			d1[3] = 255;
-		}
-	}
-
-	if ( newMap ) {
-		R_StaticFree( newMap );
-	}
-}
-
-/*
 ================
 R_SmoothNormalMap
 ================
@@ -263,7 +208,7 @@ static void R_SmoothNormalMap( byte *data, int width, int height ) {
 		{ 1, 1, 1 }
 	};
 
-	orig = (byte *)R_StaticAlloc( width * height * 4 );
+	orig = (byte *)malloc( width * height * 4 );
 	memcpy( orig, data, width * height * 4 );
 
 	for ( i = 0 ; i < width ; i++ ) {
@@ -296,7 +241,7 @@ static void R_SmoothNormalMap( byte *data, int width, int height ) {
 		}
 	}
 
-	R_StaticFree( orig );
+	free( orig );
 }
 
 
@@ -313,7 +258,6 @@ static void R_ImageAdd( byte *data1, int width1, int height1, byte *data2, int w
 
 	// resample pic2 to the same size as pic1
 	if ( width2 != width1 || height2 != height1 ) {
-		newMap = R_Dropsample( data2, width2, height2, width1, height1 );
 		data2 = newMap;
 	} else {
 		newMap = NULL;
@@ -331,7 +275,7 @@ static void R_ImageAdd( byte *data1, int width1, int height1, byte *data2, int w
 	}
 
 	if ( newMap ) {
-		R_StaticFree( newMap );
+		free( newMap );
 	}
 }
 
@@ -419,24 +363,6 @@ static bool R_ParseImageProgram_r( idLexer &src, byte **pic, int *width, int *he
 		}
 
 		MatchAndAppendToken( src, "," );
-
-		if ( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, depth ) ) {
-			if ( pic ) {
-				R_StaticFree( *pic );
-				*pic = NULL;
-			}
-			return false;
-		}
-		
-		// process it
-		if ( pic ) {
-			R_AddNormalMaps( *pic, *width, *height, pic2, width2, height2 );
-			R_StaticFree( pic2 );
-			if ( depth ) {
-				*depth = TD_BUMP;
-			}
-		}
-
 		MatchAndAppendToken( src, ")" );
 		return true;
 	}
@@ -473,7 +399,7 @@ static bool R_ParseImageProgram_r( idLexer &src, byte **pic, int *width, int *he
 
 		if ( !R_ParseImageProgram_r( src, pic ? &pic2 : NULL, &width2, &height2, timestamps, depth ) ) {
 			if ( pic ) {
-				R_StaticFree( *pic );
+				free( *pic );
 				*pic = NULL;
 			}
 			return false;
@@ -482,7 +408,7 @@ static bool R_ParseImageProgram_r( idLexer &src, byte **pic, int *width, int *he
 		// process it
 		if ( pic ) {
 			R_ImageAdd( *pic, *width, *height, pic2, width2, height2 );
-			R_StaticFree( pic2 );
+			free( pic2 );
 		}
 
 		MatchAndAppendToken( src, ")" );
@@ -591,9 +517,6 @@ static bool R_ParseImageProgram_r( idLexer &src, byte **pic, int *width, int *he
 	if ( !timestamps && !pic ) {
 		return true;
 	}
-
-	// load it as an image
-	R_LoadImage( token.c_str(), pic, width, height, &timestamp, true );
 
 	if ( timestamp == -1 ) {
 		return false;

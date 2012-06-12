@@ -75,5 +75,8 @@
     <ClCompile Include="framework\DeclTable.cpp">
       <Filter>Framework</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\Image_program.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

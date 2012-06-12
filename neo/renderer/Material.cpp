@@ -151,35 +151,6 @@ idMaterial::FreeData
 ===============
 */
 void idMaterial::FreeData() {
-	int i;
-
-	if ( stages ) {
-		// delete any idCinematic textures
-		for ( i = 0; i < numStages; i++ ) {
-			if ( stages[i].texture.cinematic != NULL ) {
-				delete stages[i].texture.cinematic;
-				stages[i].texture.cinematic = NULL;
-			}
-			if ( stages[i].newStage != NULL ) {
-				Mem_Free( stages[i].newStage );
-				stages[i].newStage = NULL;
-			}
-		}
-		R_StaticFree( stages );
-		stages = NULL;
-	}
-	if ( expressionRegisters != NULL ) {
-		R_StaticFree( expressionRegisters );
-		expressionRegisters = NULL;
-	}
-	if ( constantRegisters != NULL ) {
-		R_StaticFree( constantRegisters );
-		constantRegisters = NULL;
-	}
-	if ( ops != NULL ) {
-		R_StaticFree( ops );
-		ops = NULL;
-	}
 }
 
 /*
@@ -188,37 +159,7 @@ idMaterial::GetEditorImage
 ==============
 */
 idImage *idMaterial::GetEditorImage( void ) const {
-	if ( editorImage ) {
-		return editorImage;
-	}
-
-	// if we don't have an editorImageName, use the first stage image
-	if ( !editorImageName.Length()) {
-		// _D3XP :: First check for a diffuse image, then use the first
-		if ( numStages && stages ) {
-			int i;
-			for( i = 0; i < numStages; i++ ) {
-				if ( stages[i].lighting == SL_DIFFUSE ) {
-					editorImage = stages[i].texture.image;
-					break;
-				}
-			}
-			if ( !editorImage ) {
-				editorImage = stages[0].texture.image;
-			}
-		} else {
-			editorImage = globalImages->defaultImage;
-		}
-	} else {
-		// look for an explicit one
-		editorImage = globalImages->ImageFromFile( editorImageName, TF_DEFAULT, true, TR_REPEAT, TD_DEFAULT );
-	}
-
-	if ( !editorImage ) {
-		editorImage = globalImages->defaultImage;
-	}
-
-	return editorImage;
+	terminate();
 }
 
 
@@ -602,7 +543,7 @@ int idMaterial::ParseTerm( idLexer &src ) {
 		return EXP_REG_GLOBAL7;
 	}
 	if ( !token.Icmp( "fragmentPrograms" ) ) {
-		return GetExpressionConstant( (float) glConfig.ARBFragmentProgramAvailable );
+		return GetExpressionConstant( (float) true );
 	}
 
 	if ( !token.Icmp( "sound" ) ) {
@@ -994,9 +935,7 @@ void idMaterial::ParseFragmentMap( idLexer &src, newShaderStage_t *newStage ) {
 		}
 
 		if ( !token.Icmp( "uncompressed" ) || !token.Icmp( "highquality" ) ) {
-			if ( !globalImages->image_ignoreHighQuality.GetInteger() ) {
-				td = TD_HIGH_QUALITY;
-			}
+			td = TD_HIGH_QUALITY;
 			continue;
 		}
 		if ( !token.Icmp( "nopicmip" ) ) {
@@ -1007,13 +946,6 @@ void idMaterial::ParseFragmentMap( idLexer &src, newShaderStage_t *newStage ) {
 		// assume anything else is the image name
 		src.UnreadToken( &token );
 		break;
-	}
-	str = R_ParsePastImageProgram( src );
-
-	newStage->fragmentProgramImages[unit] = 
-		globalImages->ImageFromFile( str, tf, allowPicmip, trp, td, cubeMap );
-	if ( !newStage->fragmentProgramImages[unit] ) {
-		newStage->fragmentProgramImages[unit] = globalImages->defaultImage;
 	}
 }
 
@@ -1193,8 +1125,6 @@ void idMaterial::ParseStage( idLexer &src, const textureRepeat_t trpDefault ) {
 					continue;
 				}
 			}
-			ts->cinematic = idCinematic::Alloc();
-			ts->cinematic->InitFromFile( token.c_str(), loop );
 			continue;
 		}
 
@@ -1203,8 +1133,6 @@ void idMaterial::ParseStage( idLexer &src, const textureRepeat_t trpDefault ) {
 				common->Warning( "missing parameter for 'soundmap' keyword in material '%s'", GetName() );
 				continue;
 			}
-			ts->cinematic = new idSndWindow();
-			ts->cinematic->InitFromFile( token.c_str(), true );
 			continue;
 		}
 
@@ -1251,9 +1179,7 @@ void idMaterial::ParseStage( idLexer &src, const textureRepeat_t trpDefault ) {
 			continue;
 		}
 		if ( !token.Icmp( "uncompressed" ) || !token.Icmp( "highquality" ) ) {
-			if ( !globalImages->image_ignoreHighQuality.GetInteger() ) {
-				td = TD_HIGH_QUALITY;
-			}
+			td = TD_HIGH_QUALITY;
 			continue;
 		}
 		if ( !token.Icmp( "forceHighQuality" ) ) {
@@ -1489,33 +1415,21 @@ void idMaterial::ParseStage( idLexer &src, const textureRepeat_t trpDefault ) {
 		}
 		if ( !token.Icmp( "program" ) ) {
 			if ( src.ReadTokenOnLine( &token ) ) {
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, token.c_str() );
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, token.c_str() );
 			}
 			continue;
 		}
 		if ( !token.Icmp( "fragmentProgram" ) ) {
 			if ( src.ReadTokenOnLine( &token ) ) {
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, token.c_str() );
 			}
 			continue;
 		}
 		if ( !token.Icmp( "vertexProgram" ) ) {
 			if ( src.ReadTokenOnLine( &token ) ) {
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, token.c_str() );
 			}
 			continue;
 		}
 		if ( !token.Icmp( "megaTexture" ) ) {
 			if ( src.ReadTokenOnLine( &token ) ) {
-				newStage.megaTexture = new idMegaTexture;
-				if ( !newStage.megaTexture->InitFromMegaFile( token.c_str() ) ) {
-					delete newStage.megaTexture;
-					SetMaterialFlag( MF_DEFAULTED );
-					continue;
-				}
-				newStage.vertexProgram = R_FindARBProgram( GL_VERTEX_PROGRAM_ARB, "megaTexture.vfp" );
-				newStage.fragmentProgram = R_FindARBProgram( GL_FRAGMENT_PROGRAM_ARB, "megaTexture.vfp" );
 				continue;
 			}
 		}
@@ -1562,17 +1476,6 @@ void idMaterial::ParseStage( idLexer &src, const textureRepeat_t trpDefault ) {
 		default:
 			break;
 		}
-	}
-
-	// now load the image with all the parms we parsed
-	if ( imageName[0] ) {
-		ts->image = globalImages->ImageFromFile( imageName, tf, allowPicmip, trp, td, cubeMap );
-		if ( !ts->image ) {
-			ts->image = globalImages->defaultImage;
-		}
-	} else if ( !ts->cinematic && !ts->dynamic && !ss->newStage ) {
-		common->Warning( "material '%s' had stage with no image", GetName() );
-		ts->image = globalImages->defaultImage;
 	}
 }
 
@@ -1960,7 +1863,6 @@ void idMaterial::ParseMaterial( idLexer &src ) {
 			idStr	copy;
 
 			copy = str;	// so other things don't step on it
-			lightFalloffImage = globalImages->ImageFromFile( copy, TF_DEFAULT, false, TR_CLAMP /* TR_CLAMP_TO_ZERO */, TD_DEFAULT );
 			continue;
 		}
 		// guisurf <guifile> | guisurf entity
@@ -1974,8 +1876,6 @@ void idMaterial::ParseMaterial( idLexer &src ) {
 				entityGui = 2;
 			} else if ( !token.Icmp( "entity3" ) ) {
 				entityGui = 3;
-			} else {
-				gui = uiManager->FindGui( token.c_str(), true );
 			}
 			continue;
 		}
@@ -2109,7 +2009,6 @@ idMaterial::SetGui
 =========================
 */
 void idMaterial::SetGui( const char *_gui ) const {
-	gui = uiManager->FindGui( _gui, true, false, true );
 }
 
 /*
@@ -2137,11 +2036,6 @@ bool idMaterial::Parse( const char *text, const int textLength ) {
 
 	// parse it
 	ParseMaterial( src );
-
-	// if we are doing an fs_copyfiles, also reference the editorImage
-	if ( cvarSystem->GetCVarInteger( "fs_copyFiles" ) ) {
-		GetEditorImage();
-	}
 
 	//
 	// count non-lit stages
@@ -2220,7 +2114,7 @@ bool idMaterial::Parse( const char *text, const int textLength ) {
 
 	for ( i = 0 ; i < numStages ; i++ ) {
 		shaderStage_t	*pStage = &pd->parseStages[i];
-		if ( pStage->texture.image == globalImages->currentRenderImage ) {
+		if ( false ) {
 			if ( sort != SS_PORTAL_SKY ) {
 				sort = SS_POST_PROCESS;
 				coverage = MC_TRANSLUCENT;
@@ -2229,7 +2123,7 @@ bool idMaterial::Parse( const char *text, const int textLength ) {
 		}
 		if ( pStage->newStage ) {
 			for ( int j = 0 ; j < pStage->newStage->numFragmentProgramImages ; j++ ) {
-				if ( pStage->newStage->fragmentProgramImages[j] == globalImages->currentRenderImage ) {
+				if ( false ) {
 					if ( sort != SS_PORTAL_SKY ) {
 						sort = SS_POST_PROCESS;
 						coverage = MC_TRANSLUCENT;
@@ -2292,17 +2186,17 @@ bool idMaterial::Parse( const char *text, const int textLength ) {
 */
 
 	if (numStages) {
-		stages = (shaderStage_t *)R_StaticAlloc( numStages * sizeof( stages[0] ) );
+		stages = (shaderStage_t *)malloc( numStages * sizeof( stages[0] ) );
 		memcpy( stages, pd->parseStages, numStages * sizeof( stages[0] ) );
 	}
 
 	if ( numOps ) {
-		ops = (expOp_t *)R_StaticAlloc( numOps * sizeof( ops[0] ) );
+		ops = (expOp_t *)malloc( numOps * sizeof( ops[0] ) );
 		memcpy( ops, pd->shaderOps, numOps * sizeof( ops[0] ) );
 	}
 
 	if ( numRegisters ) {
-		expressionRegisters = (float *)R_StaticAlloc( numRegisters * sizeof( expressionRegisters[0] ) );
+		expressionRegisters = (float *)malloc( numRegisters * sizeof( expressionRegisters[0] ) );
 		memcpy( expressionRegisters, pd->shaderRegisters, numRegisters * sizeof( expressionRegisters[0] ) );
 	}
 
@@ -2546,10 +2440,6 @@ idMaterial::UpdateCinematic
 =============
 */
 void idMaterial::UpdateCinematic( int time ) const {
-	if ( !stages || !stages[0].texture.cinematic || !backEnd.viewDef ) {
-		return;
-	}
-	stages[0].texture.cinematic->ImageForTime( tr.primaryRenderView.time );
 }
 
 /*
@@ -2586,9 +2476,6 @@ idMaterial::ConstantRegisters
 =============
 */
 const float *idMaterial::ConstantRegisters() const {
-	if ( !r_useConstantMaterials.GetBool() ) {
-		return NULL;
-	}
 	return constantRegisters;
 }
 
@@ -2608,7 +2495,7 @@ void idMaterial::CheckForConstantRegisters() {
 	}
 
 	// evaluate the registers once, and save them 
-	constantRegisters = (float *)R_ClearedStaticAlloc( GetNumRegisters() * sizeof( float ) );
+	constantRegisters = (float *)calloc( GetNumRegisters(), sizeof( float ) );
 
 	float shaderParms[MAX_ENTITY_SHADER_PARMS];
 	memset( shaderParms, 0, sizeof( shaderParms ) );
@@ -2645,7 +2532,7 @@ void idMaterial::SetImageClassifications( int tag ) const {
 	for ( int i = 0 ; i < numStages ; i++ ) {
 		idImage	*image = stages[i].texture.image;
 		if ( image ) {
-			image->SetClassification( tag );
+			terminate();
 		}
 	}
 }
@@ -2722,15 +2609,5 @@ idMaterial::ReloadImages
 */
 void idMaterial::ReloadImages( bool force ) const
 {
-	for ( int i = 0 ; i < numStages ; i++ ) {
-		if ( stages[i].newStage ) {
-			for ( int j = 0 ; j < stages[i].newStage->numFragmentProgramImages ; j++ ) {
-				if ( stages[i].newStage->fragmentProgramImages[j] ) {
-					stages[i].newStage->fragmentProgramImages[j]->Reload( false, force );
-				}
-			}
-		} else if ( stages[i].texture.image ) {
-			stages[i].texture.image->Reload( false, force );
-		}
-	}
+	terminate();
 }

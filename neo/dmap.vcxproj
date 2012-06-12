@@ -20,6 +20,7 @@
     <ClCompile Include="dmap\main.cpp" />
     <ClCompile Include="framework\DeclManager.cpp" />
     <ClCompile Include="framework\DeclTable.cpp" />
+    <ClCompile Include="renderer\Image_program.cpp" />
     <ClCompile Include="renderer\Material.cpp" />
     <ClCompile Include="tools\compilers\dmap\dmap.cpp" />
     <ClCompile Include="tools\compilers\dmap\facebsp.cpp" />
