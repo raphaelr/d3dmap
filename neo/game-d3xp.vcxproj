@@ -154,6 +154,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcwd.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug with inlines and memory log|Win32'">
     <PreBuildEvent>
@@ -161,6 +164,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcwd.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug with inlines|Win32'">
     <PreBuildEvent>
@@ -168,6 +174,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcwd.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dedicated Debug with inlines|Win32'">
     <PreBuildEvent>
@@ -175,6 +184,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcwd.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dedicated Debug|Win32'">
     <PreBuildEvent>
@@ -182,6 +194,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcwd.lib;libcmtd.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Dedicated Release|Win32'">
     <PreBuildEvent>
@@ -189,6 +204,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcw.lib;libcmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <PreBuildEvent>
@@ -196,6 +214,9 @@
 "build\Win32\$(Configuration)\TypeInfo.exe" d3xp
 </Command>
     </PreBuildEvent>
+    <Link>
+      <AdditionalDependencies>windowscodecs.lib;nafxcw.lib;libcmt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="d3xp\ai\AAS.cpp" />
