@@ -397,14 +397,6 @@ static	bool TryAddNewEdge( optVertex_t *v1, optVertex_t *v2, optIsland_t *island
 		}
 	}
 
-	if ( dmapGlobals.drawflag ) {
-		qglBegin( GL_LINES );
-		qglColor3f( 0, ( 128 + orandom.RandomInt( 127 ) )/ 255.0, 0 );
-		qglVertex3fv( v1->pv.ToFloatPtr() );
-		qglVertex3fv( v2->pv.ToFloatPtr() );
-		qglEnd();
-		qglFlush();
-	}
 	// add it
 	e = AllocEdge();
 
