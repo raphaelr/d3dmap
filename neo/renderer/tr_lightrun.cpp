@@ -452,9 +452,6 @@ void R_FreeLightDefDerivedData( idRenderLightLocal *ldef ) {
 	}
 
 	// free all the interactions
-	while ( ldef->firstInteraction != NULL ) {
-		ldef->firstInteraction->UnlinkAndFree();
-	}
 
 	// free all the references to the light
 	for ( lref = ldef->references ; lref ; lref = nextRef ) {
@@ -484,29 +481,7 @@ void R_FreeEntityDefDerivedData( idRenderEntityLocal *def, bool keepDecals, bool
 	int i;
 	areaReference_t	*ref, *next;
 
-	// demo playback needs to free the joints, while normal play
-	// leaves them in the control of the game
-	if ( session->readDemo ) {
-		if ( def->parms.joints ) {
-			Mem_Free16( def->parms.joints );
-			def->parms.joints = NULL;
-		}
-		if ( def->parms.callbackData ) {
-			Mem_Free( def->parms.callbackData );
-			def->parms.callbackData = NULL;
-		}
-		for ( i = 0; i < MAX_RENDERENTITY_GUI; i++ ) {
-			if ( def->parms.gui[ i ] ) {
-				delete def->parms.gui[ i ];
-				def->parms.gui[ i ] = NULL;
-			}
-		}
-	}
-
 	// free all the interactions
-	while ( def->firstInteraction != NULL ) {
-		def->firstInteraction->UnlinkAndFree();
-	}
 
 	// clear the dynamic model if present
 	if ( def->dynamicModel ) {
@@ -548,9 +523,6 @@ R_FreeEntityDefDerivedData
 */
 void R_ClearEntityDefDynamicModel( idRenderEntityLocal *def ) {
 	// free all the interaction surfaces
-	for( idInteraction *inter = def->firstInteraction; inter != NULL && !inter->IsEmpty(); inter = inter->entityNext ) {
-		inter->FreeSurfaces();
-	}
 
 	// clear the dynamic model if present
 	if ( def->dynamicModel ) {
@@ -564,11 +536,6 @@ R_FreeEntityDefDecals
 ===================
 */
 void R_FreeEntityDefDecals( idRenderEntityLocal *def ) {
-	while( def->decals ) {
-		idRenderModelDecal *next = def->decals->Next();
-		idRenderModelDecal::Free( def->decals );
-		def->decals = next;
-	}
 }
 
 /*
@@ -577,7 +544,6 @@ R_FreeEntityDefFadedDecals
 ===================
 */
 void R_FreeEntityDefFadedDecals( idRenderEntityLocal *def, int time ) {
-	def->decals = idRenderModelDecal::RemoveFadedDecals( def->decals, time );
 }
 
 /*
@@ -586,27 +552,4 @@ R_FreeEntityDefOverlay
 ===================
 */
 void R_FreeEntityDefOverlay( idRenderEntityLocal *def ) {
-	if ( def->overlay ) {
-		idRenderModelOverlay::Free( def->overlay );
-		def->overlay = NULL;
-	}
-}
-
-/*
-===================
-R_RegenerateWorld_f
-
-Frees and regenerates all references and interactions, which
-must be done when switching between display list mode and immediate mode
-===================
-*/
-void R_RegenerateWorld_f( const idCmdArgs &args ) {
-	R_FreeDerivedData();
-
-	// watch how much memory we allocate
-	tr.staticAllocCount = 0;
-
-	R_ReCreateWorldReferences();
-
-	common->Printf( "Regenerated world, staticAllocCount = %i.\n", tr.staticAllocCount );
 }
