@@ -90,5 +90,8 @@
     <ClCompile Include="renderer\RenderEntity.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\tr_stencilshadow.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
