@@ -11,6 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="cm\CollisionModel.h" />
+    <ClInclude Include="cm\CollisionModel_local.h" />
     <ClInclude Include="dmap\tinyfs.h" />
     <ClInclude Include="framework\DeclManager.h" />
     <ClInclude Include="framework\DeclTable.h" />
@@ -22,6 +24,14 @@
     <ClInclude Include="tools\compilers\dmap\dmap.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="cm\CollisionModel_contacts.cpp" />
+    <ClCompile Include="cm\CollisionModel_contents.cpp" />
+    <ClCompile Include="cm\CollisionModel_debug.cpp" />
+    <ClCompile Include="cm\CollisionModel_files.cpp" />
+    <ClCompile Include="cm\CollisionModel_load.cpp" />
+    <ClCompile Include="cm\CollisionModel_rotate.cpp" />
+    <ClCompile Include="cm\CollisionModel_trace.cpp" />
+    <ClCompile Include="cm\CollisionModel_translate.cpp" />
     <ClCompile Include="dmap\main.cpp" />
     <ClCompile Include="dmap\tinyfs.cpp" />
     <ClCompile Include="framework\DeclManager.cpp" />

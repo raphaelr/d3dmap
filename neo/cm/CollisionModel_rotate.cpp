@@ -1634,16 +1634,6 @@ void idCollisionModelManagerLocal::Rotation( trace_t *results, const idVec3 &sta
 #ifdef _DEBUG
 	bool startsolid = false;
 	// test whether or not stuck to begin with
-	if ( cm_debugCollision.GetBool() ) {
-		if ( !entered ) {
-			entered = 1;
-			// if already messed up to begin with
-			if ( idCollisionModelManagerLocal::Contents( start, trm, trmAxis, -1, model, modelOrigin, modelAxis ) & contentMask ) {
-				startsolid = true;
-			}
-			entered = 0;
-		}
-	}
 #endif
 
 	if ( rotation.GetAngle() >= 180.0f || rotation.GetAngle() <= -180.0f) {
@@ -1675,20 +1665,5 @@ void idCollisionModelManagerLocal::Rotation( trace_t *results, const idVec3 &sta
 
 #ifdef _DEBUG
 	// test for missed collisions
-	if ( cm_debugCollision.GetBool() ) {
-		if ( !entered ) {
-			entered = 1;
-			// if the trm is stuck in the model
-			if ( idCollisionModelManagerLocal::Contents( results->endpos, trm, results->endAxis, -1, model, modelOrigin, modelAxis ) & contentMask ) {
-				trace_t tr;
-
-				// test where the trm is stuck in the model
-				idCollisionModelManagerLocal::Contents( results->endpos, trm, results->endAxis, -1, model, modelOrigin, modelAxis );
-				// re-run collision detection to find out where it failed
-				idCollisionModelManagerLocal::Rotation( &tr, start, rotation, trm, trmAxis, contentMask, model, modelOrigin, modelAxis );
-			}
-			entered = 0;
-		}
-	}
 #endif
 }

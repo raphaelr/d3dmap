@@ -13,6 +13,9 @@
     <Filter Include="Renderer\Model">
       <UniqueIdentifier>{bc7a394a-e36e-47a4-bf9e-bea6d510397e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="CM">
+      <UniqueIdentifier>{8d789155-5ccd-4b77-ad4e-da4469dca7b4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\compilers\dmap\dmap.h">
@@ -40,6 +43,12 @@
       <Filter>Renderer\Model</Filter>
     </ClInclude>
     <ClInclude Include="dmap\tinyfs.h" />
+    <ClInclude Include="cm\CollisionModel.h">
+      <Filter>CM</Filter>
+    </ClInclude>
+    <ClInclude Include="cm\CollisionModel_local.h">
+      <Filter>CM</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tools\compilers\dmap\dmap.cpp">
@@ -127,6 +136,30 @@
     <ClCompile Include="dmap\tinyfs.cpp" />
     <ClCompile Include="renderer\ModelManager.cpp">
       <Filter>Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_files.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_load.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_contents.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_contacts.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_rotate.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_trace.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_translate.cpp">
+      <Filter>CM</Filter>
+    </ClCompile>
+    <ClCompile Include="cm\CollisionModel_debug.cpp">
+      <Filter>CM</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
