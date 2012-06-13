@@ -25,6 +25,7 @@
     <ClCompile Include="renderer\RenderEntity.cpp" />
     <ClCompile Include="renderer\tr_lightrun.cpp" />
     <ClCompile Include="renderer\tr_main.cpp" />
+    <ClCompile Include="renderer\tr_polytope.cpp" />
     <ClCompile Include="renderer\tr_stencilshadow.cpp" />
     <ClCompile Include="renderer\tr_trisurf.cpp" />
     <ClCompile Include="tools\compilers\dmap\dmap.cpp" />
