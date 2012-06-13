@@ -10,6 +10,9 @@
     <Filter Include="Renderer">
       <UniqueIdentifier>{8fb0aa89-6262-435d-85d7-66feb12ed3d9}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Renderer\Model">
+      <UniqueIdentifier>{bc7a394a-e36e-47a4-bf9e-bea6d510397e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="tools\compilers\dmap\dmap.h">
@@ -23,6 +26,21 @@
     </ClInclude>
     <ClInclude Include="framework\DeclTable.h">
       <Filter>Framework</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Model.h">
+      <Filter>Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Model_ase.h">
+      <Filter>Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Model_local.h">
+      <Filter>Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Model_lwo.h">
+      <Filter>Renderer\Model</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\Model_ma.h">
+      <Filter>Renderer\Model</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -98,6 +116,18 @@
     </ClCompile>
     <ClCompile Include="renderer\Interaction.cpp">
       <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\Model.cpp">
+      <Filter>Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\Model_ase.cpp">
+      <Filter>Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\Model_lwo.cpp">
+      <Filter>Renderer\Model</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\Model_ma.cpp">
+      <Filter>Renderer\Model</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
