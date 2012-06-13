@@ -125,5 +125,8 @@
       <Filter>Renderer\Model</Filter>
     </ClCompile>
     <ClCompile Include="dmap\tinyfs.cpp" />
+    <ClCompile Include="renderer\ModelManager.cpp">
+      <Filter>Renderer\Model</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

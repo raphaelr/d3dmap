@@ -30,6 +30,7 @@
     <ClCompile Include="renderer\Interaction.cpp" />
     <ClCompile Include="renderer\Material.cpp" />
     <ClCompile Include="renderer\Model.cpp" />
+    <ClCompile Include="renderer\ModelManager.cpp" />
     <ClCompile Include="renderer\Model_lwo.cpp" />
     <ClCompile Include="renderer\Model_ma.cpp" />
     <ClCompile Include="renderer\RenderEntity.cpp" />
