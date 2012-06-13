@@ -30,9 +30,6 @@
     <ClInclude Include="renderer\Model.h">
       <Filter>Renderer\Model</Filter>
     </ClInclude>
-    <ClInclude Include="renderer\Model_ase.h">
-      <Filter>Renderer\Model</Filter>
-    </ClInclude>
     <ClInclude Include="renderer\Model_local.h">
       <Filter>Renderer\Model</Filter>
     </ClInclude>
@@ -42,6 +39,7 @@
     <ClInclude Include="renderer\Model_ma.h">
       <Filter>Renderer\Model</Filter>
     </ClInclude>
+    <ClInclude Include="dmap\tinyfs.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tools\compilers\dmap\dmap.cpp">
@@ -120,14 +118,12 @@
     <ClCompile Include="renderer\Model.cpp">
       <Filter>Renderer\Model</Filter>
     </ClCompile>
-    <ClCompile Include="renderer\Model_ase.cpp">
-      <Filter>Renderer\Model</Filter>
-    </ClCompile>
     <ClCompile Include="renderer\Model_lwo.cpp">
       <Filter>Renderer\Model</Filter>
     </ClCompile>
     <ClCompile Include="renderer\Model_ma.cpp">
       <Filter>Renderer\Model</Filter>
     </ClCompile>
+    <ClCompile Include="dmap\tinyfs.cpp" />
   </ItemGroup>
 </Project>

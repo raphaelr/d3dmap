@@ -5,6 +5,7 @@
     <_PropertySheetDisplayName>Common Project Properties</_PropertySheetDisplayName>
     <OutDir>..\build\$(PlatformName)\$(Configuration)\</OutDir>
     <IntDir>..\build\$(PlatformName)\$(Configuration)\intermediate\$(ProjectName)\</IntDir>
+    <IncludePath>$(SolutionDir)dmap\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>

@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "Model_lwo.h"
+#include "tinyfs.h"
 
 /*
 ======================================================================
@@ -87,7 +88,7 @@ lwGetClip()
 Read image references from a CLIP chunk in an LWO2 file.
 ====================================================================== */
 
-lwClip *lwGetClip( idFile *fp, int cksize )
+lwClip *lwGetClip( FILE *fp, int cksize )
 {
    lwClip *clip;
    lwPlugin *filt;
@@ -109,7 +110,7 @@ lwClip *lwGetClip( idFile *fp, int cksize )
    /* remember where we started */
 
    set_flen( 0 );
-   pos = fp->Tell();
+   pos = ftell(fp);
 
    /* index */
 
@@ -169,11 +170,11 @@ lwClip *lwGetClip( idFile *fp, int cksize )
    /* skip unread parts of the current subchunk */
 
    if ( rlen < sz )
-      fp->Seek( sz - rlen, FS_SEEK_CUR );
+      fseek( fp, sz - rlen, SEEK_CUR );
 
    /* end of the CLIP chunk? */
 
-   rlen = fp->Tell() - pos;
+   rlen = ftell(fp) - pos;
    if ( cksize < rlen ) goto Fail;
    if ( cksize == rlen )
       return clip;
@@ -256,11 +257,11 @@ lwClip *lwGetClip( idFile *fp, int cksize )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, FS_SEEK_CUR );
 
       /* end of the CLIP chunk? */
 
-      rlen = fp->Tell() - pos;
+      rlen = ftell(fp) - pos;
       if ( cksize < rlen ) goto Fail;
       if ( cksize == rlen ) break;
 
@@ -335,7 +336,7 @@ lwGetEnvelope()
 Read an ENVL chunk from an LWO2 file.
 ====================================================================== */
 
-lwEnvelope *lwGetEnvelope( idFile *fp, int cksize )
+lwEnvelope *lwGetEnvelope( FILE *fp, int cksize )
 {
    lwEnvelope *env;
    lwKey *key;
@@ -354,7 +355,7 @@ lwEnvelope *lwGetEnvelope( idFile *fp, int cksize )
    /* remember where we started */
 
    set_flen( 0 );
-   pos = fp->Tell();
+   pos = ftell(fp);
 
    /* index */
 
@@ -447,11 +448,11 @@ lwEnvelope *lwGetEnvelope( idFile *fp, int cksize )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, FS_SEEK_CUR );
 
       /* end of the ENVL chunk? */
 
-      rlen = fp->Tell() - pos;
+      rlen = ftell(fp) - pos;
       if ( cksize < rlen ) goto Fail;
       if ( cksize == rlen ) break;
 
@@ -1003,7 +1004,7 @@ void set_flen( int i ) { flen = i; }
 
 int get_flen( void ) { return flen; }
 
-void *getbytes( idFile *fp, int size )
+void *getbytes( FILE *fp, int size )
 {
    void *data;
 
@@ -1017,7 +1018,7 @@ void *getbytes( idFile *fp, int size )
       flen = FLEN_ERROR;
       return NULL;
    }
-   if ( size != fp->Read( data, size ) ) {
+   if ( size != fread( data, 1, size, fp ) ) {
       flen = FLEN_ERROR;
       Mem_Free( data );
       return NULL;
@@ -1028,23 +1029,23 @@ void *getbytes( idFile *fp, int size )
 }
 
 
-void skipbytes( idFile *fp, int n )
+void skipbytes( FILE *fp, int n )
 {
    if ( flen == FLEN_ERROR ) return;
-   if ( fp->Seek( n, FS_SEEK_CUR ))
+   if ( fseek( fp, n, SEEK_CUR ))
       flen = FLEN_ERROR;
    else
       flen += n;
 }
 
 
-int getI1( idFile *fp )
+int getI1( FILE *fp )
 {
    int i, c;
 
    if ( flen == FLEN_ERROR ) return 0;
 	c = 0;
-   i = fp->Read(&c, 1);
+   i = fread(&c, 1, 1, fp);
    if ( i < 0 ) {
       flen = FLEN_ERROR;
       return 0;
@@ -1055,12 +1056,12 @@ int getI1( idFile *fp )
 }
 
 
-short getI2( idFile *fp )
+short getI2( FILE *fp )
 {
    short i;
 
    if ( flen == FLEN_ERROR ) return 0;
-   if ( 2 != fp->Read( &i, 2 )) {
+   if ( 2 != fread( &i, 2, 1, fp )) {
       flen = FLEN_ERROR;
       return 0;
    }
@@ -1070,12 +1071,12 @@ short getI2( idFile *fp )
 }
 
 
-int getI4( idFile *fp )
+int getI4( FILE *fp )
 {
    int i;
 
    if ( flen == FLEN_ERROR ) return 0;
-   if ( 4 != fp->Read( &i, 4 )) {
+   if ( 4 != fread( &i, 4, 1, fp )) {
       flen = FLEN_ERROR;
       return 0;
    }
@@ -1085,13 +1086,13 @@ int getI4( idFile *fp )
 }
 
 
-unsigned char getU1( idFile *fp )
+unsigned char getU1( FILE *fp )
 {
    int i, c;
 
    if ( flen == FLEN_ERROR ) return 0;
 	  c = 0;
-   i = fp->Read(&c, 1);
+   i = fread(&c, 1, 1, fp);
    if ( i < 0 ) {
       flen = FLEN_ERROR;
       return 0;
@@ -1101,12 +1102,12 @@ unsigned char getU1( idFile *fp )
 }
 
 
-unsigned short getU2( idFile *fp )
+unsigned short getU2( FILE *fp )
 {
    unsigned short i;
 
    if ( flen == FLEN_ERROR ) return 0;
-   if ( 2 != fp->Read( &i, 2 )) {
+   if ( 2 != fread( &i, 2, 1, fp )) {
       flen = FLEN_ERROR;
       return 0;
    }
@@ -1116,12 +1117,12 @@ unsigned short getU2( idFile *fp )
 }
 
 
-unsigned int getU4( idFile *fp )
+unsigned int getU4( FILE *fp )
 {
    unsigned int i;
 
    if ( flen == FLEN_ERROR ) return 0;
-   if ( 4 != fp->Read( &i, 4 )) {
+   if ( 4 != fread( &i, 4, 1, fp )) {
       flen = FLEN_ERROR;
       return 0;
    }
@@ -1131,7 +1132,7 @@ unsigned int getU4( idFile *fp )
 }
 
 
-int getVX( idFile *fp )
+int getVX( FILE *fp )
 {
     byte c;
    int i;
@@ -1139,14 +1140,14 @@ int getVX( idFile *fp )
    if ( flen == FLEN_ERROR ) return 0;
 
 	c = 0;
-   if (fp->Read(&c, 1) == -1) {
+   if (fread(&c, 1, 1, fp) == -1) {
 	   return 0;
    }
 
    if ( c != 0xFF ) {
       i = c << 8;
 	  c = 0;
-	  if (fp->Read(&c, 1) == -1) {
+	  if (fread(&c, 1, 1, fp) == -1) {
 		  return 0;
 	  }
       i |= c;
@@ -1154,17 +1155,17 @@ int getVX( idFile *fp )
    }
    else {
 	  c = 0;
-	  if (fp->Read(&c, 1) == -1) {
+	  if (fread(&c, 1, 1, fp) == -1) {
 		  return 0;
 	  }
       i = c << 16;
 	  c = 0;
-	  if (fp->Read(&c, 1) == -1) {
+	  if (fread(&c, 1, 1, fp) == -1) {
 		  return 0;
 	  }
       i |= c << 8;
 	  c = 0;
-	  if (fp->Read(&c, 1) == -1) {
+	  if (fread(&c, 1, 1, fp) == -1) {
 		  return 0;
 	  }
       i |= c;
@@ -1175,12 +1176,12 @@ int getVX( idFile *fp )
 }
 
 
-float getF4( idFile *fp )
+float getF4( FILE *fp )
 {
    float f;
 
    if ( flen == FLEN_ERROR ) return 0.0f;
-   if ( 4 != fp->Read( &f, 4 ) ) {
+   if ( 4 != fread( &f, 4, 1, fp ) ) {
       flen = FLEN_ERROR;
       return 0.0f;
    }
@@ -1194,17 +1195,17 @@ float getF4( idFile *fp )
 }
 
 
-char *getS0( idFile *fp )
+char *getS0( FILE *fp )
 {
    char *s;
    int i, c, len, pos;
 
    if ( flen == FLEN_ERROR ) return NULL;
 
-   pos = fp->Tell();
+   pos = ftell(fp);
    for ( i = 1; ; i++ ) {
 	   c = 0;
-	   if (fp->Read(&c, 1) == -1) {
+	   if (fread(&c, 1, 1, fp) == -1) {
 		   flen = FLEN_ERROR;
 		   return NULL;
 	   }
@@ -1212,7 +1213,7 @@ char *getS0( idFile *fp )
    }
 
    if ( i == 1 ) {
-      if ( fp->Seek( pos + 2, FS_SEEK_SET ))
+      if ( fseek( fp, pos + 2, SEEK_SET ))
          flen = FLEN_ERROR;
       else
          flen += 2;
@@ -1226,11 +1227,11 @@ char *getS0( idFile *fp )
       return NULL;
    }
 
-   if ( fp->Seek( pos, FS_SEEK_SET )) {
+   if ( fseek( fp, pos, SEEK_SET )) {
       flen = FLEN_ERROR;
       return NULL;
    }
-   if ( len != fp->Read( s, len )) {
+   if ( len != fread( s, len, 1, fp )) {
       flen = FLEN_ERROR;
       return NULL;
    }
@@ -1434,7 +1435,7 @@ can be used to diagnose the cause.
 
 2.  If an error occurs while reading, failID will contain the most
     recently read IFF chunk ID, and failpos will contain the value
-    returned by fp->Tell() at the time of the failure.
+    returned by ftell(fp) at the time of the failure.
 
 3.  If the file couldn't be opened, or an error occurs while reading
     the first 12 bytes, both failID and failpos will be unchanged.
@@ -1444,14 +1445,14 @@ If you don't need this information, failID and failpos can be NULL.
 
 lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos )
 {
-   idFile *fp = NULL;
+   FILE *fp = NULL;
    lwObject *object;
    lwLayer *layer;
    lwNode *node;
    int id, formsize, type, cksize;
    int i, rlen;
 
-   fp = fileSystem->OpenFileRead( filename );
+   fp = TFS_OpenFileRead( filename );
    if ( !fp ) {
 	   return NULL;
    }
@@ -1463,20 +1464,20 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
    formsize = getU4( fp );
    type     = getU4( fp );
    if ( 12 != get_flen() ) {
-      fileSystem->CloseFile( fp );
+      fclose(fp);
       return NULL;
    }
 
    /* is this a LW object? */
 
    if ( id != ID_FORM ) {
-      fileSystem->CloseFile( fp );
+      fclose( fp );
       if ( failpos ) *failpos = 12;
       return NULL;
    }
 
    if ( type != ID_LWO2 ) {
-	  fileSystem->CloseFile( fp );
+	  fclose( fp );
       if ( type == ID_LWOB )
          return lwGetObject5( filename, failID, failpos );
       else {
@@ -1493,8 +1494,6 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
    layer = (lwLayer*)Mem_ClearedAlloc( sizeof( lwLayer ) );
    if ( !layer ) goto Fail;
    object->layer = layer;
-
-   object->timeStamp = fp->Timestamp();
 
    /* get the first chunk header */
 
@@ -1531,7 +1530,7 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
                layer->parent = getU2( fp );
             rlen = get_flen();
             if ( rlen < cksize )
-               fp->Seek( cksize - rlen, FS_SEEK_CUR );
+               fseek( fp, cksize - rlen, SEEK_CUR );
             break;
 
          case ID_PNTS:
@@ -1567,7 +1566,7 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
             rlen = get_flen();
             if ( rlen < 0 || rlen > cksize ) goto Fail;
             if ( rlen < cksize )
-               fp->Seek( cksize - rlen, FS_SEEK_CUR );
+               fseek( fp, cksize - rlen, FS_SEEK_CUR );
             break;
 
          case ID_TAGS:
@@ -1600,13 +1599,13 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
          case ID_TEXT:
          case ID_ICON:
          default:
-            fp->Seek( cksize, FS_SEEK_CUR );
+            fseek( fp, cksize, SEEK_CUR );
             break;
       }
 
       /* end of the file? */
 
-      if ( formsize <= fp->Tell() - 8 ) break;
+      if ( formsize <= ftell(fp) - 8 ) break;
 
       /* get the next chunk header */
 
@@ -1616,7 +1615,7 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
       if ( 8 != get_flen() ) goto Fail;
    }
 
-   fileSystem->CloseFile( fp );
+   fclose( fp );
    fp = NULL;
 
    if ( object->nlayers == 0 )
@@ -1640,8 +1639,8 @@ lwObject *lwGetObject( const char *filename, unsigned int *failID, int *failpos 
 Fail:
    if ( failID ) *failID = id;
    if ( fp ) {
-      if ( failpos ) *failpos = fp->Tell();
-      fileSystem->CloseFile( fp );
+      if ( failpos ) *failpos = ftell(fp);
+      fclose( fp );
    }
    lwFreeObject( object );
    return NULL;
@@ -1818,7 +1817,7 @@ lwGetSurface5()
 Read an lwSurface from an LWOB file.
 ====================================================================== */
 
-lwSurface *lwGetSurface5( idFile *fp, int cksize, lwObject *obj )
+lwSurface *lwGetSurface5( FILE *fp, int cksize, lwObject *obj )
 {
    lwSurface *surf;
    lwTexture *tex;
@@ -1849,7 +1848,7 @@ lwSurface *lwGetSurface5( idFile *fp, int cksize, lwObject *obj )
    /* remember where we started */
 
    set_flen( 0 );
-   pos = fp->Tell();
+   pos = ftell(fp);
 
    /* name */
 
@@ -2094,11 +2093,11 @@ lwSurface *lwGetSurface5( idFile *fp, int cksize, lwObject *obj )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, SEEK_CUR );
 
       /* end of the SURF chunk? */
 
-      if ( cksize <= fp->Tell() - pos )
+      if ( cksize <= ftell(fp) - pos )
          break;
 
       /* get the next subchunk header */
@@ -2125,7 +2124,7 @@ Read polygon records from a POLS chunk in an LWOB file.  The polygons
 are added to the array in the lwPolygonList.
 ====================================================================== */
 
-int lwGetPolygons5( idFile *fp, int cksize, lwPolygonList *plist, int ptoffset )
+int lwGetPolygons5( FILE *fp, int cksize, lwPolygonList *plist, int ptoffset )
 {
    lwPolygon *pp;
    lwPolVert *pv;
@@ -2208,7 +2207,7 @@ to diagnose the cause.
 
 2.  If an error occurs while reading an LWOB, failID will contain the
     most recently read IFF chunk ID, and failpos will contain the
-    value returned by fp->Tell() at the time of the failure.
+    value returned by ftell(fp) at the time of the failure.
 
 3.  If the file couldn't be opened, or an error occurs while reading
     the first 12 bytes, both failID and failpos will be unchanged.
@@ -2218,7 +2217,7 @@ If you don't need this information, failID and failpos can be NULL.
 
 lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos )
 {
-   idFile *fp = NULL;
+   FILE *fp = NULL;
    lwObject *object;
    lwLayer *layer;
    lwNode *node;
@@ -2231,7 +2230,7 @@ lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos
    //if ( !fp ) return NULL;
 
    /* read the first 12 bytes */
-   fp = fileSystem->OpenFileRead( filename );
+   fp = TFS_OpenFileRead( filename );
    if ( !fp ) {
 	   return NULL;
    }
@@ -2241,14 +2240,14 @@ lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos
    formsize = getU4( fp );
    type     = getU4( fp );
    if ( 12 != get_flen() ) {
-      fileSystem->CloseFile( fp );
+      fclose( fp );
       return NULL;
    }
 
    /* LWOB? */
 
    if ( id != ID_FORM || type != ID_LWOB ) {
-      fileSystem->CloseFile( fp );
+      fclose( fp );
       if ( failpos ) *failpos = 12;
       return NULL;
    }
@@ -2300,13 +2299,13 @@ lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos
             break;
 
          default:
-            fp->Seek( cksize, FS_SEEK_CUR );
+            fseek( fp, cksize, FS_SEEK_CUR );
             break;
       }
 
       /* end of the file? */
 
-      if ( formsize <= fp->Tell() - 8 ) break;
+      if ( formsize <= ftell(fp) - 8 ) break;
 
       /* get the next chunk header */
 
@@ -2316,7 +2315,7 @@ lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos
       if ( 8 != get_flen() ) goto Fail2;
    }
 
-   fileSystem->CloseFile( fp );
+   fclose( fp );
    fp = NULL;
 
    lwGetBoundingBox( &layer->point, layer->bbox );
@@ -2331,8 +2330,8 @@ lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos
 Fail2:
    if ( failID ) *failID = id;
    if ( fp ) {
-      if ( failpos ) *failpos = fp->Tell();
-      fileSystem->CloseFile( fp );
+      if ( failpos ) *failpos = ftell(fp);
+      fclose( fp );
    }
    lwFreeObject( object );
    return NULL;
@@ -2399,7 +2398,7 @@ Read point records from a PNTS chunk in an LWO2 file.  The points are
 added to the array in the lwPointList.
 ====================================================================== */
 
-int lwGetPoints( idFile *fp, int cksize, lwPointList *point )
+int lwGetPoints( FILE *fp, int cksize, lwPointList *point )
 {
 	float *f;
 	int np, i, j;
@@ -2519,7 +2518,7 @@ Read polygon records from a POLS chunk in an LWO2 file.  The polygons
 are added to the array in the lwPolygonList.
 ====================================================================== */
 
-int lwGetPolygons( idFile *fp, int cksize, lwPolygonList *plist, int ptoffset )
+int lwGetPolygons( FILE *fp, int cksize, lwPolygonList *plist, int ptoffset )
 {
    lwPolygon *pp;
    lwPolVert *pv;
@@ -2795,7 +2794,7 @@ Read tag strings from a TAGS chunk in an LWO2 file.  The tags are
 added to the lwTagList array.
 ====================================================================== */
 
-int lwGetTags( idFile *fp, int cksize, lwTagList *tlist )
+int lwGetTags( FILE *fp, int cksize, lwTagList *tlist )
 {
 	char *buf, *bp;
 	int i, len, ntags;
@@ -2854,7 +2853,7 @@ lwGetPolygonTags()
 Read polygon tags from a PTAG chunk in an LWO2 file.
 ====================================================================== */
 
-int lwGetPolygonTags( idFile *fp, int cksize, lwTagList *tlist, lwPolygonList *plist )
+int lwGetPolygonTags( FILE *fp, int cksize, lwTagList *tlist, lwPolygonList *plist )
 {
 	unsigned int type;
 	int rlen = 0, i, j;
@@ -2865,7 +2864,7 @@ int lwGetPolygonTags( idFile *fp, int cksize, lwTagList *tlist, lwPolygonList *p
 	if ( rlen < 0 ) return 0;
 
 	if ( type != ID_SURF && type != ID_PART && type != ID_SMGP ) {
-		fp->Seek( cksize - 4, FS_SEEK_CUR );
+		fseek( fp, cksize - 4, SEEK_CUR );
 		return 1;
 	}
 
@@ -2974,7 +2973,7 @@ the first subchunk in a BLOK, and its contents are common to all three
 texture types.
 ====================================================================== */
 
-int lwGetTHeader( idFile *fp, int hsz, lwTexture *tex )
+int lwGetTHeader( FILE *fp, int hsz, lwTexture *tex )
 {
 	unsigned int id;
 	unsigned short sz;
@@ -2984,7 +2983,7 @@ int lwGetTHeader( idFile *fp, int hsz, lwTexture *tex )
 	/* remember where we started */
 
 	set_flen( 0 );
-	pos = fp->Tell();
+	pos = ftell(fp);
 
 	/* ordinal string */
 
@@ -3037,11 +3036,11 @@ int lwGetTHeader( idFile *fp, int hsz, lwTexture *tex )
 		/* skip unread parts of the current subchunk */
 
 		if ( rlen < sz )
-			fp->Seek( sz - rlen, FS_SEEK_CUR );
+			fseek( fp, sz - rlen, SEEK_CUR );
 
 		/* end of the texture header subchunk? */
 
-		if ( hsz <= fp->Tell() - pos )
+		if ( hsz <= ftell(fp) - pos )
 			break;
 
 		/* get the next subchunk header */
@@ -3052,7 +3051,7 @@ int lwGetTHeader( idFile *fp, int hsz, lwTexture *tex )
 		if ( 6 != get_flen() ) return 0;
 	}
 
-	set_flen( fp->Tell() - pos );
+	set_flen( ftell(fp) - pos );
 	return 1;
 }
 
@@ -3065,13 +3064,13 @@ Read a texture map from a SURF.BLOK in an LWO2 file.  The TMAP
 defines the mapping from texture to world or object coordinates.
 ====================================================================== */
 
-int lwGetTMap( idFile *fp, int tmapsz, lwTMap *tmap )
+int lwGetTMap( FILE *fp, int tmapsz, lwTMap *tmap )
 {
 	unsigned int id;
 	unsigned short sz;
 	int rlen, pos, i;
 
-	pos = fp->Tell();
+	pos = ftell(fp);
 	id = getU4( fp );
 	sz = getU2( fp );
 	if ( 0 > get_flen() ) return 0;
@@ -3126,11 +3125,11 @@ int lwGetTMap( idFile *fp, int tmapsz, lwTMap *tmap )
 		/* skip unread parts of the current subchunk */
 
 		if ( rlen < sz )
-			fp->Seek( sz - rlen, FS_SEEK_CUR );
+			fseek( fp, sz - rlen, FS_SEEK_CUR );
 
 		/* end of the TMAP subchunk? */
 
-		if ( tmapsz <= fp->Tell() - pos )
+		if ( tmapsz <= ftell(fp) - pos )
 			break;
 
 		/* get the next subchunk header */
@@ -3141,7 +3140,7 @@ int lwGetTMap( idFile *fp, int tmapsz, lwTMap *tmap )
 		if ( 6 != get_flen() ) return 0;
 	}
 
-	set_flen( fp->Tell() - pos );
+	set_flen( ftell(fp) - pos );
 	return 1;
 }
 
@@ -3153,13 +3152,13 @@ lwGetImageMap()
 Read an lwImageMap from a SURF.BLOK in an LWO2 file.
 ====================================================================== */
 
-int lwGetImageMap( idFile *fp, int rsz, lwTexture *tex )
+int lwGetImageMap( FILE *fp, int rsz, lwTexture *tex )
 {
 	unsigned int id;
 	unsigned short sz;
 	int rlen, pos;
 
-	pos = fp->Tell();
+	pos = ftell(fp);
 	id = getU4( fp );
 	sz = getU2( fp );
 	if ( 0 > get_flen() ) return 0;
@@ -3235,11 +3234,11 @@ int lwGetImageMap( idFile *fp, int rsz, lwTexture *tex )
 		/* skip unread parts of the current subchunk */
 
 		if ( rlen < sz )
-			fp->Seek( sz - rlen, FS_SEEK_CUR );
+			fseek( fp, sz - rlen, FS_SEEK_CUR );
 
 		/* end of the image map? */
 
-		if ( rsz <= fp->Tell() - pos )
+		if ( rsz <= ftell(fp) - pos )
 			break;
 
 		/* get the next subchunk header */
@@ -3250,7 +3249,7 @@ int lwGetImageMap( idFile *fp, int rsz, lwTexture *tex )
 		if ( 6 != get_flen() ) return 0;
 	}
 
-	set_flen( fp->Tell() - pos );
+	set_flen( ftell(fp) - pos );
 	return 1;
 }
 
@@ -3262,13 +3261,13 @@ lwGetProcedural()
 Read an lwProcedural from a SURF.BLOK in an LWO2 file.
 ====================================================================== */
 
-int lwGetProcedural( idFile *fp, int rsz, lwTexture *tex )
+int lwGetProcedural( FILE *fp, int rsz, lwTexture *tex )
 {
    unsigned int id;
    unsigned short sz;
    int rlen, pos;
 
-   pos = fp->Tell();
+   pos = ftell(fp);
    id = getU4( fp );
    sz = getU2( fp );
    if ( 0 > get_flen() ) return 0;
@@ -3310,11 +3309,11 @@ int lwGetProcedural( idFile *fp, int rsz, lwTexture *tex )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, SEEK_CUR );
 
       /* end of the procedural block? */
 
-      if ( rsz <= fp->Tell() - pos )
+      if ( rsz <= ftell(fp) - pos )
          break;
 
       /* get the next subchunk header */
@@ -3325,7 +3324,7 @@ int lwGetProcedural( idFile *fp, int rsz, lwTexture *tex )
       if ( 6 != get_flen() ) return 0;
    }
 
-   set_flen( fp->Tell() - pos );
+   set_flen( ftell(fp) - pos );
    return 1;
 }
 
@@ -3337,13 +3336,13 @@ lwGetGradient()
 Read an lwGradient from a SURF.BLOK in an LWO2 file.
 ====================================================================== */
 
-int lwGetGradient( idFile *fp, int rsz, lwTexture *tex )
+int lwGetGradient( FILE *fp, int rsz, lwTexture *tex )
 {
    unsigned int id;
    unsigned short sz;
    int rlen, pos, i, j, nkeys;
 
-   pos = fp->Tell();
+   pos = ftell(fp);
    id = getU4( fp );
    sz = getU2( fp );
    if ( 0 > get_flen() ) return 0;
@@ -3408,11 +3407,11 @@ int lwGetGradient( idFile *fp, int rsz, lwTexture *tex )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, SEEK_CUR );
 
       /* end of the gradient? */
 
-      if ( rsz <= fp->Tell() - pos )
+      if ( rsz <= ftell(fp) - pos )
          break;
 
       /* get the next subchunk header */
@@ -3423,7 +3422,7 @@ int lwGetGradient( idFile *fp, int rsz, lwTexture *tex )
       if ( 6 != get_flen() ) return 0;
    }
 
-   set_flen( fp->Tell() - pos );
+   set_flen( ftell(fp) - pos );
    return 1;
 }
 
@@ -3435,7 +3434,7 @@ lwGetTexture()
 Read an lwTexture from a SURF.BLOK in an LWO2 file.
 ====================================================================== */
 
-lwTexture *lwGetTexture( idFile *fp, int bloksz, unsigned int type )
+lwTexture *lwGetTexture( FILE *fp, int bloksz, unsigned int type )
 {
    lwTexture *tex;
    unsigned short sz;
@@ -3463,7 +3462,7 @@ lwTexture *lwGetTexture( idFile *fp, int bloksz, unsigned int type )
       case ID_PROC:  ok = lwGetProcedural( fp, sz, tex );  break;
       case ID_GRAD:  ok = lwGetGradient( fp, sz, tex );  break;
       default:
-         ok = !fp->Seek( sz, FS_SEEK_CUR );
+         ok = !fseek( fp, sz, SEEK_CUR );
    }
 
    if ( !ok ) {
@@ -3483,7 +3482,7 @@ lwGetShader()
 Read a shader record from a SURF.BLOK in an LWO2 file.
 ====================================================================== */
 
-lwPlugin *lwGetShader( idFile *fp, int bloksz )
+lwPlugin *lwGetShader( FILE *fp, int bloksz )
 {
    lwPlugin *shdr;
    unsigned int id;
@@ -3493,7 +3492,7 @@ lwPlugin *lwGetShader( idFile *fp, int bloksz )
    shdr = (lwPlugin*)Mem_ClearedAlloc( sizeof( lwPlugin ) );
    if ( !shdr ) return NULL;
 
-   pos = fp->Tell();
+   pos = ftell(fp);
    set_flen( 0 );
    hsz = getU2( fp );
    shdr->ord = getS0( fp );
@@ -3509,7 +3508,7 @@ lwPlugin *lwGetShader( idFile *fp, int bloksz )
          break;
       }
       else {
-         fp->Seek( sz, FS_SEEK_CUR );
+         fseek( fp, sz, SEEK_CUR );
          id = getU4( fp );
          sz = getU2( fp );
       }
@@ -3542,11 +3541,11 @@ lwPlugin *lwGetShader( idFile *fp, int bloksz )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, FS_SEEK_CUR );
 
       /* end of the shader block? */
 
-      if ( bloksz <= fp->Tell() - pos )
+      if ( bloksz <= ftell(fp) - pos )
          break;
 
       /* get the next subchunk header */
@@ -3557,7 +3556,7 @@ lwPlugin *lwGetShader( idFile *fp, int bloksz )
       if ( 6 != get_flen() ) goto Fail;
    }
 
-   set_flen( fp->Tell() - pos );
+   set_flen( ftell(fp) - pos );
    return shdr;
 
 Fail:
@@ -3652,7 +3651,7 @@ lwGetSurface()
 Read an lwSurface from an LWO2 file.
 ====================================================================== */
 
-lwSurface *lwGetSurface( idFile *fp, int cksize )
+lwSurface *lwGetSurface( FILE *fp, int cksize )
 {
    lwSurface *surf;
    lwTexture *tex;
@@ -3681,7 +3680,7 @@ lwSurface *lwGetSurface( idFile *fp, int cksize )
    /* remember where we started */
 
    set_flen( 0 );
-   pos = fp->Tell();
+   pos = ftell(fp);
 
    /* names */
 
@@ -3857,11 +3856,11 @@ lwSurface *lwGetSurface( idFile *fp, int cksize )
       /* skip unread parts of the current subchunk */
 
       if ( rlen < sz )
-         fp->Seek( sz - rlen, FS_SEEK_CUR );
+         fseek( fp, sz - rlen, SEEK_CUR );
 
       /* end of the SURF chunk? */
 
-      if ( cksize <= fp->Tell() - pos )
+      if ( cksize <= ftell(fp) - pos )
          break;
 
       /* get the next subchunk header */
@@ -3935,7 +3934,7 @@ lwGetVMap()
 Read an lwVMap from a VMAP or VMAD chunk in an LWO2.
 ====================================================================== */
 
-lwVMap *lwGetVMap( idFile *fp, int cksize, int ptoffset, int poloffset,
+lwVMap *lwGetVMap( FILE *fp, int cksize, int ptoffset, int poloffset,
    int perpoly )
 {
    unsigned char *buf, *bp;

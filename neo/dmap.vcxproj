@@ -11,11 +11,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="dmap\tinyfs.h" />
     <ClInclude Include="framework\DeclManager.h" />
     <ClInclude Include="framework\DeclTable.h" />
     <ClInclude Include="renderer\Material.h" />
     <ClInclude Include="renderer\Model.h" />
-    <ClInclude Include="renderer\Model_ase.h" />
     <ClInclude Include="renderer\Model_local.h" />
     <ClInclude Include="renderer\Model_lwo.h" />
     <ClInclude Include="renderer\Model_ma.h" />
@@ -23,13 +23,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dmap\main.cpp" />
+    <ClCompile Include="dmap\tinyfs.cpp" />
     <ClCompile Include="framework\DeclManager.cpp" />
     <ClCompile Include="framework\DeclTable.cpp" />
     <ClCompile Include="renderer\Image_program.cpp" />
     <ClCompile Include="renderer\Interaction.cpp" />
     <ClCompile Include="renderer\Material.cpp" />
     <ClCompile Include="renderer\Model.cpp" />
-    <ClCompile Include="renderer\Model_ase.cpp" />
     <ClCompile Include="renderer\Model_lwo.cpp" />
     <ClCompile Include="renderer\Model_ma.cpp" />
     <ClCompile Include="renderer\RenderEntity.cpp" />

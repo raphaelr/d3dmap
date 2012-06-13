@@ -1834,18 +1834,7 @@ idRenderModelStatic::LoadASE
 =================
 */
 bool idRenderModelStatic::LoadASE( const char *fileName ) {
-	aseModel_t *ase;
-
-	ase = ASE_Load( fileName );
-	if ( ase == NULL ) {
-		return false;
-	}
-
-	ConvertASEToModelSurfaces( ase );
-
-	ASE_Free( ase );
-
-	return true;
+	return false;
 }
 
 /*

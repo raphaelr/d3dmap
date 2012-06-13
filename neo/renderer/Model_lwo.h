@@ -578,24 +578,24 @@ void lwFreeLayer( lwLayer *layer );
 
 void lwFreePoints( lwPointList *point );
 void lwFreePolygons( lwPolygonList *plist );
-int lwGetPoints( idFile *fp, int cksize, lwPointList *point );
+int lwGetPoints( FILE *fp, int cksize, lwPointList *point );
 void lwGetBoundingBox( lwPointList *point, float bbox[] );
 int lwAllocPolygons( lwPolygonList *plist, int npols, int nverts );
-int lwGetPolygons( idFile *fp, int cksize, lwPolygonList *plist, int ptoffset );
+int lwGetPolygons( FILE *fp, int cksize, lwPolygonList *plist, int ptoffset );
 void lwGetPolyNormals( lwPointList *point, lwPolygonList *polygon );
 int lwGetPointPolygons( lwPointList *point, lwPolygonList *polygon );
 int lwResolvePolySurfaces( lwPolygonList *polygon, lwTagList *tlist,
    lwSurface **surf, int *nsurfs );
 void lwGetVertNormals( lwPointList *point, lwPolygonList *polygon );
 void lwFreeTags( lwTagList *tlist );
-int lwGetTags( idFile *fp, int cksize, lwTagList *tlist );
-int lwGetPolygonTags( idFile *fp, int cksize, lwTagList *tlist,
+int lwGetTags( FILE *fp, int cksize, lwTagList *tlist );
+int lwGetPolygonTags( FILE *fp, int cksize, lwTagList *tlist,
    lwPolygonList *plist );
 
 /* vmap.c */
 
 void lwFreeVMap( lwVMap *vmap );
-lwVMap *lwGetVMap( idFile *fp, int cksize, int ptoffset, int poloffset,
+lwVMap *lwGetVMap( FILE *fp, int cksize, int ptoffset, int poloffset,
    int perpoly );
 int lwGetPointVMaps( lwPointList *point, lwVMap *vmap );
 int lwGetPolyVMaps( lwPolygonList *polygon, lwVMap *vmap );
@@ -603,13 +603,13 @@ int lwGetPolyVMaps( lwPolygonList *polygon, lwVMap *vmap );
 /* clip.c */
 
 void lwFreeClip( lwClip *clip );
-lwClip *lwGetClip( idFile *fp, int cksize );
+lwClip *lwGetClip( FILE *fp, int cksize );
 lwClip *lwFindClip( lwClip *list, int index );
 
 /* envelope.c */
 
 void lwFreeEnvelope( lwEnvelope *env );
-lwEnvelope *lwGetEnvelope( idFile *fp, int cksize );
+lwEnvelope *lwGetEnvelope( FILE *fp, int cksize );
 lwEnvelope *lwFindEnvelope( lwEnvelope *list, int index );
 float lwEvalEnvelope( lwEnvelope *env, float time );
 
@@ -618,20 +618,20 @@ float lwEvalEnvelope( lwEnvelope *env, float time );
 void lwFreePlugin( lwPlugin *p );
 void lwFreeTexture( lwTexture *t );
 void lwFreeSurface( lwSurface *surf );
-int lwGetTHeader( idFile *fp, int hsz, lwTexture *tex );
-int lwGetTMap( idFile *fp, int tmapsz, lwTMap *tmap );
-int lwGetImageMap( idFile *fp, int rsz, lwTexture *tex );
-int lwGetProcedural( idFile *fp, int rsz, lwTexture *tex );
-int lwGetGradient( idFile *fp, int rsz, lwTexture *tex );
-lwTexture *lwGetTexture( idFile *fp, int bloksz, unsigned int type );
-lwPlugin *lwGetShader( idFile *fp, int bloksz );
-lwSurface *lwGetSurface( idFile *fp, int cksize );
+int lwGetTHeader( FILE *fp, int hsz, lwTexture *tex );
+int lwGetTMap( FILE *fp, int tmapsz, lwTMap *tmap );
+int lwGetImageMap( FILE *fp, int rsz, lwTexture *tex );
+int lwGetProcedural( FILE *fp, int rsz, lwTexture *tex );
+int lwGetGradient( FILE *fp, int rsz, lwTexture *tex );
+lwTexture *lwGetTexture( FILE *fp, int bloksz, unsigned int type );
+lwPlugin *lwGetShader( FILE *fp, int bloksz );
+lwSurface *lwGetSurface( FILE *fp, int cksize );
 lwSurface *lwDefaultSurface( void );
 
 /* lwob.c */
 
-lwSurface *lwGetSurface5( idFile *fp, int cksize, lwObject *obj );
-int lwGetPolygons5( idFile *fp, int cksize, lwPolygonList *plist, int ptoffset );
+lwSurface *lwGetSurface5( FILE *fp, int cksize, lwObject *obj );
+int lwGetPolygons5( FILE *fp, int cksize, lwPolygonList *plist, int ptoffset );
 lwObject *lwGetObject5( const char *filename, unsigned int *failID, int *failpos );
 
 /* list.c */
@@ -652,17 +652,17 @@ void normalize( float v[] );
 
 void  set_flen( int i );
 int   get_flen( void );
-void *getbytes( idFile *fp, int size );
-void  skipbytes( idFile *fp, int n );
-int   getI1( idFile *fp );
-short getI2( idFile *fp );
-int   getI4( idFile *fp );
-unsigned char  getU1( idFile *fp );
-unsigned short getU2( idFile *fp );
-unsigned int   getU4( idFile *fp );
-int   getVX( idFile *fp );
-float getF4( idFile *fp );
-char *getS0( idFile *fp );
+void *getbytes( FILE *fp, int size );
+void  skipbytes( FILE *fp, int n );
+int   getI1( FILE *fp );
+short getI2( FILE *fp );
+int   getI4( FILE *fp );
+unsigned char  getU1( FILE *fp );
+unsigned short getU2( FILE *fp );
+unsigned int   getU4( FILE *fp );
+int   getVX( FILE *fp );
+float getF4( FILE *fp );
+char *getS0( FILE *fp );
 int   sgetI1( unsigned char **bp );
 short sgetI2( unsigned char **bp );
 int   sgetI4( unsigned char **bp );

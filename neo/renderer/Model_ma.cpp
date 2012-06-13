@@ -30,6 +30,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "Model_ma.h"
+#include "tinyfs.h"
 
 /*
 ======================================================================
@@ -792,7 +793,7 @@ int MA_AddMaterial(const char* materialName) {
 			
 			//Remove the OS stuff
 			idStr qPath;
-			qPath = fileSystem->OSPathToRelativePath( matNode->file->path );
+			qPath = TFS_OSPathToRelativePath( matNode->file->path );
 			
 			strcpy(material->name, qPath.c_str());
 
@@ -1007,17 +1008,15 @@ MA_Load
 */
 maModel_t *MA_Load( const char *fileName ) {
 	char *buf;
-	ID_TIME_T timeStamp;
 	maModel_t *ma;
 
-	fileSystem->ReadFile( fileName, (void **)&buf, &timeStamp );
+	TFS_ReadFile( fileName, (void **) &buf );
 	if ( !buf ) {
 		return NULL;
 	}
 
 	try {
 		ma = MA_Parse( buf, fileName, false );
-		ma->timeStamp = timeStamp;
 	} catch( idException &e ) {
 		common->Warning("%s", e.error);
 		if(maGlobal.model) {
@@ -1026,7 +1025,7 @@ maModel_t *MA_Load( const char *fileName ) {
 		ma = NULL;
 	}
 
-	fileSystem->FreeFile( buf );
+	free(buf);
 
 	return ma;
 }
