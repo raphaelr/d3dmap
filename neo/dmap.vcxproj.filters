@@ -78,5 +78,17 @@
     <ClCompile Include="renderer\Image_program.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\tr_lightrun.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\tr_trisurf.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\tr_main.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\RenderEntity.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

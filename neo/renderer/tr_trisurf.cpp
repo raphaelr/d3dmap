@@ -202,27 +202,6 @@ void R_ShutdownTriSurfData( void ) {
 
 /*
 ===============
-R_PurgeTriSurfData
-===============
-*/
-void R_PurgeTriSurfData( frameData_t *frame ) {
-	// free deferred triangle surfaces
-	R_FreeDeferredTriSurfs( frame );
-
-	// free empty base blocks
-	triVertexAllocator.FreeEmptyBaseBlocks();
-	triIndexAllocator.FreeEmptyBaseBlocks();
-	triShadowVertexAllocator.FreeEmptyBaseBlocks();
-	triPlaneAllocator.FreeEmptyBaseBlocks();
-	triSilIndexAllocator.FreeEmptyBaseBlocks();
-	triSilEdgeAllocator.FreeEmptyBaseBlocks();
-	triDominantTrisAllocator.FreeEmptyBaseBlocks();
-	triMirroredVertAllocator.FreeEmptyBaseBlocks();
-	triDupVertAllocator.FreeEmptyBaseBlocks();
-}
-
-/*
-===============
 R_ShowTriMemory_f
 ===============
 */
@@ -426,6 +405,26 @@ void R_ReallyFreeStaticTriSurf( srfTriangles_t *tri ) {
 
 /*
 ==============
+R_FreeStaticTriSurf
+
+This will defer the free until the current frame has run through the back end.
+==============
+*/
+void R_FreeStaticTriSurf( srfTriangles_t *tri ) {
+	if ( !tri ) {
+		return;
+	}
+
+	if ( tri->nextDeferredFree ) {
+		common->Error( "R_FreeStaticTriSurf: freed a freed triangle" );
+	}
+
+	// command line utility, or rendering in editor preview mode ( force )
+	R_ReallyFreeStaticTriSurf( tri );
+}
+
+/*
+==============
 R_CheckStaticTriSurfMemory
 ==============
 */
@@ -455,63 +454,6 @@ void R_CheckStaticTriSurfMemory( const srfTriangles_t *tri ) {
 	if ( tri->shadowVertexes != NULL ) {
 		const char *error = triShadowVertexAllocator.CheckMemory( tri->shadowVertexes );
 		assert( error == NULL );
-	}
-}
-
-/*
-==================
-R_FreeDeferredTriSurfs
-==================
-*/
-void R_FreeDeferredTriSurfs( frameData_t *frame ) {
-	srfTriangles_t	*tri, *next;
-
-	if ( !frame ) {
-		return;
-	}
-
-	for ( tri = frame->firstDeferredFreeTriSurf; tri; tri = next ) {
-		next = tri->nextDeferredFree;
-		R_ReallyFreeStaticTriSurf( tri );
-	}
-
-	frame->firstDeferredFreeTriSurf = NULL;
-	frame->lastDeferredFreeTriSurf = NULL;
-}
-
-/*
-==============
-R_FreeStaticTriSurf
-
-This will defer the free until the current frame has run through the back end.
-==============
-*/
-void R_FreeStaticTriSurf( srfTriangles_t *tri ) {
-	frameData_t		*frame;
-
-	if ( !tri ) {
-		return;
-	}
-
-	if ( tri->nextDeferredFree ) {
-		common->Error( "R_FreeStaticTriSurf: freed a freed triangle" );
-	}
-	frame = frameData;
-
-	if ( !frame ) {
-		// command line utility, or rendering in editor preview mode ( force )
-		R_ReallyFreeStaticTriSurf( tri );
-	} else {
-#ifdef ID_DEBUG_MEMORY
-		R_CheckStaticTriSurfMemory( tri );
-#endif
-		tri->nextDeferredFree = NULL;
-		if ( frame->lastDeferredFreeTriSurf ) {
-			frame->lastDeferredFreeTriSurf->nextDeferredFree = tri;
-		} else {
-			frame->firstDeferredFreeTriSurf = tri;
-		}
-		frame->lastDeferredFreeTriSurf = tri;
 	}
 }
 
@@ -718,39 +660,9 @@ static int *R_CreateSilRemap( const srfTriangles_t *tri ) {
 
 	remap = (int *)R_ClearedStaticAlloc( tri->numVerts * sizeof( remap[0] ) );
 
-	if ( !r_useSilRemap.GetBool() ) {
-		for ( i = 0 ; i < tri->numVerts ; i++ ) {
-			remap[i] = i;
-		}
-		return remap;
-	}
-
-	idHashIndex		hash( 1024, tri->numVerts );
-
-	c_removed = 0;
-	c_unique = 0;
 	for ( i = 0 ; i < tri->numVerts ; i++ ) {
-		v1 = &tri->verts[i];
-
-		// see if there is an earlier vert that it can map to
-		hashKey = hash.GenerateKey( v1->xyz );
-		for ( j = hash.First( hashKey ); j >= 0; j = hash.Next( j ) ) {
-			v2 = &tri->verts[j];
-			if ( v2->xyz[0] == v1->xyz[0]
-				&& v2->xyz[1] == v1->xyz[1]
-				&& v2->xyz[2] == v1->xyz[2] ) {
-				c_removed++;
-				remap[i] = j;
-				break;
-			}
-		}
-		if ( j < 0 ) {
-			c_unique++;
-			remap[i] = i;
-			hash.Add( hashKey, i );
-		}
+		remap[i] = i;
 	}
-
 	return remap;
 }
 
@@ -1633,200 +1545,6 @@ void R_DeriveUnsmoothedTangents( srfTriangles_t *tri ) {
 #endif
 
 	tri->tangentsCalculated = true;
-}
-
-/*
-==================
-R_DeriveTangents
-
-This is called once for static surfaces, and every frame for deforming surfaces
-
-Builds tangents, normals, and face planes
-==================
-*/
-void R_DeriveTangents( srfTriangles_t *tri, bool allocFacePlanes ) {
-	int				i;
-	idPlane			*planes;
-
-	if ( tri->dominantTris != NULL ) {
-		R_DeriveUnsmoothedTangents( tri );
-		return;
-	}
-
-	if ( tri->tangentsCalculated ) {
-		return;
-	}
-
-	tr.pc.c_tangentIndexes += tri->numIndexes;
-
-	if ( !tri->facePlanes && allocFacePlanes ) {
-		R_AllocStaticTriSurfPlanes( tri, tri->numIndexes );
-	}
-	planes = tri->facePlanes;
-
-#if 1
-
-	if ( !planes ) {
-		planes = (idPlane *)_alloca16( ( tri->numIndexes / 3 ) * sizeof( planes[0] ) );
-	}
-
-	SIMDProcessor->DeriveTangents( planes, tri->verts, tri->numVerts, tri->indexes, tri->numIndexes );
-
-#else
-
-	for ( i = 0; i < tri->numVerts; i++ ) {
-		tri->verts[i].normal.Zero();
-		tri->verts[i].tangents[0].Zero();
-		tri->verts[i].tangents[1].Zero();
-	}
-
-	for ( i = 0; i < tri->numIndexes; i += 3 ) {
-		// make face tangents
-		float		d0[5], d1[5];
-		idDrawVert	*a, *b, *c;
-		idVec3		temp, normal, tangents[2];
-
-		a = tri->verts + tri->indexes[i + 0];
-		b = tri->verts + tri->indexes[i + 1];
-		c = tri->verts + tri->indexes[i + 2];
-
-		d0[0] = b->xyz[0] - a->xyz[0];
-		d0[1] = b->xyz[1] - a->xyz[1];
-		d0[2] = b->xyz[2] - a->xyz[2];
-		d0[3] = b->st[0] - a->st[0];
-		d0[4] = b->st[1] - a->st[1];
-
-		d1[0] = c->xyz[0] - a->xyz[0];
-		d1[1] = c->xyz[1] - a->xyz[1];
-		d1[2] = c->xyz[2] - a->xyz[2];
-		d1[3] = c->st[0] - a->st[0];
-		d1[4] = c->st[1] - a->st[1];
-
-		// normal
-		temp[0] = d1[1] * d0[2] - d1[2] * d0[1];
-		temp[1] = d1[2] * d0[0] - d1[0] * d0[2];
-		temp[2] = d1[0] * d0[1] - d1[1] * d0[0];
-		VectorNormalizeFast2( temp, normal );
-
-#ifdef USE_INVA
-		float area = d0[3] * d1[4] - d0[4] * d1[3];
-		float inva = area < 0.0f ? -1 : 1;		// was = 1.0f / area;
-
-        temp[0] = (d0[0] * d1[4] - d0[4] * d1[0]) * inva;
-        temp[1] = (d0[1] * d1[4] - d0[4] * d1[1]) * inva;
-        temp[2] = (d0[2] * d1[4] - d0[4] * d1[2]) * inva;
-		VectorNormalizeFast2( temp, tangents[0] );
-        
-        temp[0] = (d0[3] * d1[0] - d0[0] * d1[3]) * inva;
-        temp[1] = (d0[3] * d1[1] - d0[1] * d1[3]) * inva;
-        temp[2] = (d0[3] * d1[2] - d0[2] * d1[3]) * inva;
-		VectorNormalizeFast2( temp, tangents[1] );
-#else
-        temp[0] = (d0[0] * d1[4] - d0[4] * d1[0]);
-        temp[1] = (d0[1] * d1[4] - d0[4] * d1[1]);
-        temp[2] = (d0[2] * d1[4] - d0[4] * d1[2]);
-		VectorNormalizeFast2( temp, tangents[0] );
-        
-        temp[0] = (d0[3] * d1[0] - d0[0] * d1[3]);
-        temp[1] = (d0[3] * d1[1] - d0[1] * d1[3]);
-        temp[2] = (d0[3] * d1[2] - d0[2] * d1[3]);
-		VectorNormalizeFast2( temp, tangents[1] );
-#endif
-
-		// sum up the tangents and normals for each vertex on this face
-		for ( int j = 0 ; j < 3 ; j++ ) {
-			vert = &tri->verts[tri->indexes[i+j]];
-			vert->normal += normal;
-			vert->tangents[0] += tangents[0];
-			vert->tangents[1] += tangents[1];
-		}
-
-		if ( planes ) {
-			planes->Normal() = normal;
-			planes->FitThroughPoint( a->xyz );
-			planes++;
-		}
-	}
-
-#endif
-
-#if 0
-
-	if ( tri->silIndexes != NULL ) {
-		for ( i = 0; i < tri->numVerts; i++ ) {
-			tri->verts[i].normal.Zero();
-		}
-		for ( i = 0; i < tri->numIndexes; i++ ) {
-			tri->verts[tri->silIndexes[i]].normal += planes[i/3].Normal();
-		}
-		for ( i = 0 ; i < tri->numIndexes ; i++ ) {
-			tri->verts[tri->indexes[i]].normal = tri->verts[tri->silIndexes[i]].normal;
-		}
-	}
-
-#else
-
-	int *dupVerts = tri->dupVerts;
-	idDrawVert *verts = tri->verts;
-
-	// add the normal of a duplicated vertex to the normal of the first vertex with the same XYZ
-	for ( i = 0; i < tri->numDupVerts; i++ ) {
-		verts[dupVerts[i*2+0]].normal += verts[dupVerts[i*2+1]].normal;
-	}
-
-	// copy vertex normals to duplicated vertices
-	for ( i = 0; i < tri->numDupVerts; i++ ) {
-		verts[dupVerts[i*2+1]].normal = verts[dupVerts[i*2+0]].normal;
-	}
-
-#endif
-
-#if 0
-	// sum up both sides of the mirrored verts
-	// so the S vectors exactly mirror, and the T vectors are equal
-	for ( i = 0 ; i < tri->numMirroredVerts ; i++ ) {
-		idDrawVert	*v1, *v2;
-
-		v1 = &tri->verts[ tri->numVerts - tri->numMirroredVerts + i ];
-		v2 = &tri->verts[ tri->mirroredVerts[i] ];
-
-		v1->tangents[0] -= v2->tangents[0];
-		v1->tangents[1] += v2->tangents[1];
-
-		v2->tangents[0] = vec3_origin - v1->tangents[0];
-		v2->tangents[1] = v1->tangents[1];
-	}
-#endif
-
-	// project the summed vectors onto the normal plane
-	// and normalize.  The tangent vectors will not necessarily
-	// be orthogonal to each other, but they will be orthogonal
-	// to the surface normal.
-#if 1
-
-	SIMDProcessor->NormalizeTangents( tri->verts, tri->numVerts );
-
-#else
-
-	for ( i = 0 ; i < tri->numVerts ; i++ ) {
-		idDrawVert *vert = &tri->verts[i];
-
-		VectorNormalizeFast2( vert->normal, vert->normal );
-
-		// project the tangent vectors
-		for ( int j = 0 ; j < 2 ; j++ ) {
-			float d;
-
-			d = vert->tangents[j] * vert->normal;
-			vert->tangents[j] = vert->tangents[j] - d * vert->normal;
-			VectorNormalizeFast2( vert->tangents[j], vert->tangents[j] );
-		}
-	}
-
-#endif
-
-	tri->tangentsCalculated = true;
-	tri->facePlanesCalculated = true;
 }
 
 /*
