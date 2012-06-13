@@ -21,6 +21,7 @@
     <ClCompile Include="framework\DeclManager.cpp" />
     <ClCompile Include="framework\DeclTable.cpp" />
     <ClCompile Include="renderer\Image_program.cpp" />
+    <ClCompile Include="renderer\Interaction.cpp" />
     <ClCompile Include="renderer\Material.cpp" />
     <ClCompile Include="renderer\RenderEntity.cpp" />
     <ClCompile Include="renderer\tr_lightrun.cpp" />

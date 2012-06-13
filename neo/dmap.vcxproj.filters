@@ -96,5 +96,8 @@
     <ClCompile Include="renderer\tr_polytope.cpp">
       <Filter>Renderer</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\Interaction.cpp">
+      <Filter>Renderer</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
