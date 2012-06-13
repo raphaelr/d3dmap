@@ -120,11 +120,6 @@ protected:
 	bool						reloadable;				// if not, reloadModels won't check timestamp
 	bool						levelLoadReferenced;	// for determining if it needs to be freed
 	ID_TIME_T						timeStamp;
-
-	static idCVar				r_mergeModelSurfaces;	// combine model surfaces with the same material
-	static idCVar				r_slopVertex;			// merge xyz coordinates this far apart
-	static idCVar				r_slopTexCoord;			// merge texture coordinates this far apart
-	static idCVar				r_slopNormal;			// merge normals that dot less than this
 };
 
 /*
