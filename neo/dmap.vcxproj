@@ -74,6 +74,7 @@
     <ProjectGuid>{3EB2D876-8ADF-4D97-BCF0-6F8C2597F54A}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>dmap</RootNamespace>
+    <ProjectName>d3dmap</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
