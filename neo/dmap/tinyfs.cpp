@@ -14,7 +14,7 @@ FILE* TFS_OpenFileWrite(const char *filename)
 
 void TFS_ReadFile(const char *filename, void **buffer, int *outLength)
 {
-	outLength = 0;
+	*outLength = 0;
 	FILE *f = fopen(filename, "rb");
 	if(!f) {
 		*buffer = NULL;

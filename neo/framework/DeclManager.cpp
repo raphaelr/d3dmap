@@ -27,6 +27,7 @@ If you have questions concerning this license or the applicable additional terms
 */
 
 #include "../idlib/precompiled.h"
+#include "tinyfs.h"
 #pragma hdrstop
 
 /*
@@ -594,27 +595,7 @@ int idDeclFile::LoadAndParse() {
 	// load the text
 	common->DPrintf( "...loading '%s'\n", fileName.c_str() );
 
-	FILE *f = fopen( fileName, "r" );
-	if(!f) {
-		common->FatalError( "couldn't load %s", fileName.c_str() );
-	}
-
-	fseek( f, 0, SEEK_END );
-	length = ftell( f );
-	fseek( f, 0, SEEK_SET );
-	buffer = (char*) malloc(length);
-	for(int didRead = 0; didRead < length; ) {
-		int result = fread(buffer + didRead, 1, length - didRead, f);
-		if(result == -1) {
-			common->FatalError( "couldn't load %s", fileName.c_str() );
-		}
-		didRead += result;
-	}
-
-	if ( length == -1 ) {
-		common->FatalError( "couldn't load %s", fileName.c_str() );
-		return 0;
-	}
+	TFS_ReadFile(fileName, (void**) &buffer, &length);
 
 	if ( !src.LoadMemory( buffer, length, fileName ) ) {
 		common->Error( "Couldn't parse %s", fileName.c_str() );
@@ -755,7 +736,7 @@ int idDeclFile::LoadAndParse() {
 
 	numLines = src.GetLineNum();
 
-	Mem_Free( buffer );
+	free( buffer );
 
 	// any defs that weren't redefinedInReload should now be defaulted
 	for ( idDeclLocal *decl = decls ; decl ; decl = decl->nextInFile ) {
