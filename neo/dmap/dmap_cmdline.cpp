@@ -4,7 +4,7 @@
 
 void Dmap( const idCmdArgs &args );
 
-static void help();
+static void help(char *exename);
 
 DmapCmdLine::DmapCmdLine(int argc, char **argv)
 	: argsOk(true)
@@ -12,6 +12,8 @@ DmapCmdLine::DmapCmdLine(int argc, char **argv)
 	bool haveFilename = false;
 	
 	dmapArgs.AppendArg("dmap");
+	exename = argv[0];
+
 	for(int i = 1; i < argc; i++) {
 		if(!strcmp(argv[i], "--lightCarve")) {
 			dmapArgs.AppendArg("lightCarve");
@@ -55,13 +57,13 @@ DmapCmdLine::DmapCmdLine(int argc, char **argv)
 
 void DmapCmdLine::run()
 {
-	if(!argsOk) return help();
+	if(!argsOk) return help(exename);
 	Dmap(dmapArgs);
 }
 
-void help()
+void help(char *exename)
 {
-	printf("Usage:\tdmap [options] filename\n\n");
+	printf("Usage:\t%s [options] filename\n\n", exename);
 	
 	printf("Options: --light-carve: Split polygons along light volume edges\n");
 	printf("         --no-carve: Doesn't cut any surfaces as if they had the noFragment global keyword\n");
