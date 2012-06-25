@@ -1,5 +1,6 @@
 #include "../idlib/precompiled.h"
 #include "../sys/sys_local.h"
+#include "../renderer/tr_local.h"
 #include "dmap_cmdline.h"
 #pragma hdrstop
 
@@ -49,7 +50,7 @@ public:
 	virtual void			PrintWarnings( void ) {}
 	virtual void			ClearWarnings( const char *reason ) {}
 	virtual void			Error( const char *fmt, ... ) { STDIO_PRINT( "ERROR: ", "\n" ); exit(0); }
-	virtual void			FatalError( const char *fmt, ... ) { STDIO_PRINT( "FATAL ERROR: ", "\n" ); exit(0); }
+	virtual void			FatalError( const char *fmt, ... ) { STDIO_PRINT( "FATAL ERROR: ", "\n" ); abort(); }
 	virtual const idLangDict *GetLanguageDict() { return NULL; }
 	virtual const char *	KeysFromBinding( const char *bind ) { return NULL; }
 	virtual const char *	BindingFromKey( const char *key ) { return NULL; }
@@ -224,6 +225,8 @@ int main( int argc, char** argv ) {
 	idLib::sys = sys;
 
 	idLib::Init();
+	declManager->Init();
+	R_InitTriSurfData();
 
 	DmapCmdLine dmap(argc, argv);
 	dmap.run();

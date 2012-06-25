@@ -1681,7 +1681,7 @@ void idLexer::FreeSource( void ) {
 	}
 #endif //PUNCTABLE
 	if ( idLexer::allocated ) {
-		Mem_Free( (void *) idLexer::buffer );
+		free( (void *) idLexer::buffer );
 		idLexer::buffer = NULL;
 		idLexer::allocated = false;
 	}
