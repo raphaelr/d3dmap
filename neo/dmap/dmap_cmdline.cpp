@@ -15,8 +15,6 @@ DmapCmdLine::DmapCmdLine(int argc, char **argv)
 	for(int i = 1; i < argc; i++) {
 		if(!strcmp(argv[i], "--lightCarve")) {
 			dmapArgs.AppendArg("lightCarve");
-		} else if(!strcmp(argv[i], "--no-aas")) {
-			dmapArgs.AppendArg("noAAS");
 		} else if(!strcmp(argv[i], "--no-carve")) {
 			dmapArgs.AppendArg("noCarve");
 		} else if(!strcmp(argv[i], "--no-clip-sides")) {
@@ -66,7 +64,6 @@ void help()
 	printf("Usage:\tdmap [options] filename\n\n");
 	
 	printf("Options: --light-carve: Split polygons along light volume edges\n");
-	printf("         --no-aas: Do not create AAS files\n");
 	printf("         --no-carve: Doesn't cut any surfaces as if they had the noFragment global keyword\n");
 	printf("         --no-clip-sides: Doesn't clip overlapping solid brushes\n");
 	printf("         --no-cm: Do not create collission map\n");
@@ -83,6 +80,7 @@ void help()
 	printf("             4: SO_CLIP_SILS\n");
 	printf("             5: SO_SIL_OPTIMIZE\n\n");
 	
+	printf("No AAS support in this executable.\n");
 	printf("Extracted from the Doom 3 sourcecode, licensed under the GNU GPL v3.\n");
 	printf("See <https://github.com/TTimo/doom3.gpl/blob/master/COPYING.txt>\n");
 	printf("Information for this help text was taken from modwiki.net.\n");
