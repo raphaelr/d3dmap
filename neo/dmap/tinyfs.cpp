@@ -7,24 +7,36 @@ FILE* TFS_OpenFileRead(const char *filename)
 	return fopen(filename, "r");
 }
 
-void TFS_ReadFile(const char *filename, void **buffer)
+FILE* TFS_OpenFileWrite(const char *filename)
 {
+	return fopen(filename, "w");
+}
+
+void TFS_ReadFile(const char *filename, void **buffer, int *outLength)
+{
+	outLength = 0;
 	FILE *f = fopen(filename, "rb");
+	if(!f) {
+		*buffer = NULL;
+		return;
+	}
+
 	fseek(f, 0, SEEK_END);
 	long length = ftell(f);
+	fseek(f, 0, SEEK_SET);
 
 	*buffer = malloc(length);
 	char *dst = (char*) *buffer;
 
-	long dataRead = 0;
-	while(dataRead < length) {
-		int result = fread(dst + dataRead, 1, length - dataRead, f);
-		if(result == -1) {
-			free(*buffer);
-			*buffer = NULL;
-			return;
-		}
-		dataRead += result;
+	int result = fread(dst, 1, length, f);
+	if(result != length) {
+		free(*buffer);
+		*buffer = NULL;
+		return;
+	}
+	
+	if(outLength) {
+		*outLength = length;
 	}
 }
 

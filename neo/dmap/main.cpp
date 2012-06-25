@@ -1,5 +1,6 @@
 #include "../idlib/precompiled.h"
 #include "../sys/sys_local.h"
+#include "dmap_cmdline.h"
 #pragma hdrstop
 
 int idEventLoop::JournalLevel( void ) const { return 0; }
@@ -223,6 +224,9 @@ int main( int argc, char** argv ) {
 	idLib::sys = sys;
 
 	idLib::Init();
+
+	DmapCmdLine dmap(argc, argv);
+	dmap.run();
 
 	return 0;
 }

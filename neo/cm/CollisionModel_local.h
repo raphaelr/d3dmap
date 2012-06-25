@@ -474,12 +474,12 @@ private:			// CollisionMap_load.cpp
 
 private:			// CollisionMap_files.cpp
 					// writing
-	void			WriteNodes( idFile *fp, cm_node_t *node );
+	void			WriteNodes( FILE *fp, cm_node_t *node );
 	int				CountPolygonMemory( cm_node_t *node ) const;
-	void			WritePolygons( idFile *fp, cm_node_t *node );
+	void			WritePolygons( FILE *fp, cm_node_t *node );
 	int				CountBrushMemory( cm_node_t *node ) const;
-	void			WriteBrushes( idFile *fp, cm_node_t *node );
-	void			WriteCollisionModel( idFile *fp, cm_model_t *model );
+	void			WriteBrushes( FILE *fp, cm_node_t *node );
+	void			WriteCollisionModel( FILE *fp, cm_model_t *model );
 	void			WriteCollisionModelsToFile( const char *filename, int firstModel, int lastModel, unsigned int mapFileCRC );
 					// loading
 	cm_node_t *		ParseNodes( idLexer *src, cm_model_t *model, cm_node_t *parent );

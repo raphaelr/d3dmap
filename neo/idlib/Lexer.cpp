@@ -28,6 +28,7 @@ If you have questions concerning this license or the applicable additional terms
 
 #include "precompiled.h"
 #pragma hdrstop
+#include "tinyfs.h"
 
 #define PUNCTABLE
 
@@ -1604,21 +1605,16 @@ int idLexer::LoadFile( const char *filename, bool OSPath ) {
 	} else {
 		pathname = filename;
 	}
-	if ( OSPath ) {
-		fp = idLib::fileSystem->OpenExplicitFileRead( pathname );
-	} else {
-		fp = idLib::fileSystem->OpenFileRead( pathname );
-	}
-	if ( !fp ) {
+
+	TFS_ReadFile(filename, (void**) &buf, &length);
+	if(!buf) {
+		loaded = false;
+		free( buf );
 		return false;
 	}
-	length = fp->Length();
-	buf = (char *) Mem_Alloc( length + 1 );
-	buf[length] = '\0';
-	fp->Read( buf, length );
-	idLexer::fileTime = fp->Timestamp();
-	idLexer::filename = fp->GetFullPath();
-	idLib::fileSystem->CloseFile( fp );
+
+	idLexer::fileTime = 1;
+	idLexer::filename = filename;
 
 	idLexer::buffer = buf;
 	idLexer::length = length;

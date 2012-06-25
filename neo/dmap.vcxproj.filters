@@ -49,6 +49,7 @@
     <ClInclude Include="cm\CollisionModel_local.h">
       <Filter>CM</Filter>
     </ClInclude>
+    <ClInclude Include="dmap\dmap_cmdline.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tools\compilers\dmap\dmap.cpp">
@@ -161,5 +162,6 @@
     <ClCompile Include="cm\CollisionModel_debug.cpp">
       <Filter>CM</Filter>
     </ClCompile>
+    <ClCompile Include="dmap\dmap_cmdline.cpp" />
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@
   <ItemGroup>
     <ClInclude Include="cm\CollisionModel.h" />
     <ClInclude Include="cm\CollisionModel_local.h" />
+    <ClInclude Include="dmap\dmap_cmdline.h" />
     <ClInclude Include="dmap\tinyfs.h" />
     <ClInclude Include="framework\DeclManager.h" />
     <ClInclude Include="framework\DeclTable.h" />
@@ -32,6 +33,7 @@
     <ClCompile Include="cm\CollisionModel_rotate.cpp" />
     <ClCompile Include="cm\CollisionModel_trace.cpp" />
     <ClCompile Include="cm\CollisionModel_translate.cpp" />
+    <ClCompile Include="dmap\dmap_cmdline.cpp" />
     <ClCompile Include="dmap\main.cpp" />
     <ClCompile Include="dmap\tinyfs.cpp" />
     <ClCompile Include="framework\DeclManager.cpp" />

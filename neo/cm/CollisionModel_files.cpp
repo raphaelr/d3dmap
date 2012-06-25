@@ -38,6 +38,7 @@ If you have questions concerning this license or the applicable additional terms
 #pragma hdrstop
 
 #include "CollisionModel_local.h"
+#include "tinyfs.h"
 
 #define CM_FILE_EXT			"cm"
 #define CM_FILEID			"CM"
@@ -61,8 +62,8 @@ int CM_GetNodeContents( cm_node_t *node );
 idCollisionModelManagerLocal::WriteNodes
 ================
 */
-void idCollisionModelManagerLocal::WriteNodes( idFile *fp, cm_node_t *node ) {
-	fp->WriteFloatString( "\t( %d %f )\n", node->planeType, node->planeDist );
+void idCollisionModelManagerLocal::WriteNodes( FILE *fp, cm_node_t *node ) {
+	fprintf(fp, "\t( %d %f )\n", node->planeType, node->planeDist );
 	if ( node->planeType != -1 ) {
 		WriteNodes( fp, node->children[0] );
 		WriteNodes( fp, node->children[1] );
@@ -101,7 +102,7 @@ int idCollisionModelManagerLocal::CountPolygonMemory( cm_node_t *node ) const {
 idCollisionModelManagerLocal::WritePolygons
 ================
 */
-void idCollisionModelManagerLocal::WritePolygons( idFile *fp, cm_node_t *node ) {
+void idCollisionModelManagerLocal::WritePolygons( FILE *fp, cm_node_t *node ) {
 	cm_polygonRef_t *pref;
 	cm_polygon_t *p;
 	int i;
@@ -112,14 +113,14 @@ void idCollisionModelManagerLocal::WritePolygons( idFile *fp, cm_node_t *node ) 
 			continue;
 		}
 		p->checkcount = checkCount;
-		fp->WriteFloatString( "\t%d (", p->numEdges );
+		fprintf(fp, "\t%d (", p->numEdges );
 		for ( i = 0; i < p->numEdges; i++ ) {
-			fp->WriteFloatString( " %d", p->edges[i] );
+			fprintf(fp, " %d", p->edges[i] );
 		}
-		fp->WriteFloatString( " ) ( %f %f %f ) %f", p->plane.Normal()[0], p->plane.Normal()[1], p->plane.Normal()[2], p->plane.Dist() );
-		fp->WriteFloatString( " ( %f %f %f )", p->bounds[0][0], p->bounds[0][1], p->bounds[0][2] );
-		fp->WriteFloatString( " ( %f %f %f )", p->bounds[1][0], p->bounds[1][1], p->bounds[1][2] );
-		fp->WriteFloatString( " \"%s\"\n", p->material->GetName() );
+		fprintf(fp, " ) ( %f %f %f ) %f", p->plane.Normal()[0], p->plane.Normal()[1], p->plane.Normal()[2], p->plane.Dist() );
+		fprintf(fp, " ( %f %f %f )", p->bounds[0][0], p->bounds[0][1], p->bounds[0][2] );
+		fprintf(fp, " ( %f %f %f )", p->bounds[1][0], p->bounds[1][1], p->bounds[1][2] );
+		fprintf(fp, " \"%s\"\n", p->material->GetName() );
 	}
 	if ( node->planeType != -1 ) {
 		WritePolygons( fp, node->children[0] );
@@ -159,7 +160,7 @@ int idCollisionModelManagerLocal::CountBrushMemory( cm_node_t *node ) const {
 idCollisionModelManagerLocal::WriteBrushes
 ================
 */
-void idCollisionModelManagerLocal::WriteBrushes( idFile *fp, cm_node_t *node ) {
+void idCollisionModelManagerLocal::WriteBrushes( FILE *fp, cm_node_t *node ) {
 	cm_brushRef_t *bref;
 	cm_brush_t *b;
 	int i;
@@ -170,12 +171,12 @@ void idCollisionModelManagerLocal::WriteBrushes( idFile *fp, cm_node_t *node ) {
 			continue;
 		}
 		b->checkcount = checkCount;
-		fp->WriteFloatString( "\t%d {\n", b->numPlanes );
+		fprintf(fp, "\t%d {\n", b->numPlanes );
 		for ( i = 0; i < b->numPlanes; i++ ) {
-			fp->WriteFloatString( "\t\t( %f %f %f ) %f\n", b->planes[i].Normal()[0], b->planes[i].Normal()[1], b->planes[i].Normal()[2], b->planes[i].Dist() );
+			fprintf(fp, "\t\t( %f %f %f ) %f\n", b->planes[i].Normal()[0], b->planes[i].Normal()[1], b->planes[i].Normal()[2], b->planes[i].Dist() );
 		}
-		fp->WriteFloatString( "\t} ( %f %f %f )", b->bounds[0][0], b->bounds[0][1], b->bounds[0][2] );
-		fp->WriteFloatString( " ( %f %f %f ) \"%s\"\n", b->bounds[1][0], b->bounds[1][1], b->bounds[1][2], StringFromContents( b->contents ) );
+		fprintf(fp, "\t} ( %f %f %f )", b->bounds[0][0], b->bounds[0][1], b->bounds[0][2] );
+		fprintf(fp, " ( %f %f %f ) \"%s\"\n", b->bounds[1][0], b->bounds[1][1], b->bounds[1][2], StringFromContents( b->contents ) );
 	}
 	if ( node->planeType != -1 ) {
 		WriteBrushes( fp, node->children[0] );
@@ -188,42 +189,42 @@ void idCollisionModelManagerLocal::WriteBrushes( idFile *fp, cm_node_t *node ) {
 idCollisionModelManagerLocal::WriteCollisionModel
 ================
 */
-void idCollisionModelManagerLocal::WriteCollisionModel( idFile *fp, cm_model_t *model ) {
+void idCollisionModelManagerLocal::WriteCollisionModel( FILE *fp, cm_model_t *model ) {
 	int i, polygonMemory, brushMemory;
 
-	fp->WriteFloatString( "collisionModel \"%s\" {\n", model->name.c_str() );
+	fprintf(fp, "collisionModel \"%s\" {\n", model->name.c_str() );
 	// vertices
-	fp->WriteFloatString( "\tvertices { /* numVertices = */ %d\n", model->numVertices );
+	fprintf(fp, "\tvertices { /* numVertices = */ %d\n", model->numVertices );
 	for ( i = 0; i < model->numVertices; i++ ) {
-		fp->WriteFloatString( "\t/* %d */ ( %f %f %f )\n", i, model->vertices[i].p[0], model->vertices[i].p[1], model->vertices[i].p[2] );
+		fprintf(fp, "\t/* %d */ ( %f %f %f )\n", i, model->vertices[i].p[0], model->vertices[i].p[1], model->vertices[i].p[2] );
 	}
-	fp->WriteFloatString( "\t}\n" );
+	fprintf(fp, "\t}\n" );
 	// edges
-	fp->WriteFloatString( "\tedges { /* numEdges = */ %d\n", model->numEdges );
+	fprintf(fp, "\tedges { /* numEdges = */ %d\n", model->numEdges );
 	for ( i = 0; i < model->numEdges; i++ ) {
-		fp->WriteFloatString( "\t/* %d */ ( %d %d ) %d %d\n", i, model->edges[i].vertexNum[0], model->edges[i].vertexNum[1], model->edges[i].internal, model->edges[i].numUsers );
+		fprintf(fp, "\t/* %d */ ( %d %d ) %d %d\n", i, model->edges[i].vertexNum[0], model->edges[i].vertexNum[1], model->edges[i].internal, model->edges[i].numUsers );
 	}
-	fp->WriteFloatString( "\t}\n" );
+	fprintf(fp, "\t}\n" );
 	// nodes
-	fp->WriteFloatString( "\tnodes {\n" );
+	fprintf(fp, "\tnodes {\n" );
 	WriteNodes( fp, model->node );
-	fp->WriteFloatString( "\t}\n" );
+	fprintf(fp, "\t}\n" );
 	// polygons
 	checkCount++;
 	polygonMemory = CountPolygonMemory( model->node );
-	fp->WriteFloatString( "\tpolygons /* polygonMemory = */ %d {\n", polygonMemory );
+	fprintf(fp, "\tpolygons /* polygonMemory = */ %d {\n", polygonMemory );
 	checkCount++;
 	WritePolygons( fp, model->node );
-	fp->WriteFloatString( "\t}\n" );
+	fprintf(fp, "\t}\n" );
 	// brushes
 	checkCount++;
 	brushMemory = CountBrushMemory( model->node );
-	fp->WriteFloatString( "\tbrushes /* brushMemory = */ %d {\n", brushMemory );
+	fprintf(fp, "\tbrushes /* brushMemory = */ %d {\n", brushMemory );
 	checkCount++;
 	WriteBrushes( fp, model->node );
-	fp->WriteFloatString( "\t}\n" );
+	fprintf(fp, "\t}\n" );
 	// closing brace
-	fp->WriteFloatString( "}\n" );
+	fprintf(fp, "}\n" );
 }
 
 /*
@@ -233,7 +234,7 @@ idCollisionModelManagerLocal::WriteCollisionModelsToFile
 */
 void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char *filename, int firstModel, int lastModel, unsigned int mapFileCRC ) {
 	int i;
-	idFile *fp;
+	FILE *fp;
 	idStr name;
 
 	name = filename;
@@ -241,23 +242,23 @@ void idCollisionModelManagerLocal::WriteCollisionModelsToFile( const char *filen
 
 	common->Printf( "writing %s\n", name.c_str() );
 	// _D3XP was saving to fs_cdpath
-	fp = fileSystem->OpenFileWrite( name, "fs_devpath" );
+	fp = TFS_OpenFileWrite( name );
 	if ( !fp ) {
 		common->Warning( "idCollisionModelManagerLocal::WriteCollisionModelsToFile: Error opening file %s\n", name.c_str() );
 		return;
 	}
 
 	// write file id and version
-	fp->WriteFloatString( "%s \"%s\"\n\n", CM_FILEID, CM_FILEVERSION );
+	fprintf(fp, "%s \"%s\"\n\n", CM_FILEID, CM_FILEVERSION );
 	// write the map file crc
-	fp->WriteFloatString( "%u\n\n", mapFileCRC );
+	fprintf(fp, "%u\n\n", mapFileCRC );
 
 	// write the collision models
 	for ( i = firstModel; i < lastModel; i++ ) {
 		WriteCollisionModel( fp, models[ i ] );
 	}
 
-	fileSystem->CloseFile( fp );
+	fclose( fp );
 }
 
 /*
@@ -266,7 +267,7 @@ idCollisionModelManagerLocal::WriteCollisionModelForMapEntity
 ================
 */
 bool idCollisionModelManagerLocal::WriteCollisionModelForMapEntity( const idMapEntity *mapEnt, const char *filename, const bool testTraceModel ) {
-	idFile *fp;
+	FILE *fp;
 	idStr name;
 	cm_model_t *model;
 
@@ -278,7 +279,7 @@ bool idCollisionModelManagerLocal::WriteCollisionModelForMapEntity( const idMapE
 	name.SetFileExtension( CM_FILE_EXT );
 
 	common->Printf( "writing %s\n", name.c_str() );
-	fp = fileSystem->OpenFileWrite( name, "fs_devpath" );
+	fp = TFS_OpenFileWrite( name );
 	if ( !fp ) {
 		common->Printf( "idCollisionModelManagerLocal::WriteCollisionModelForMapEntity: Error opening file %s\n", name.c_str() );
 		FreeModel( model );
@@ -286,14 +287,14 @@ bool idCollisionModelManagerLocal::WriteCollisionModelForMapEntity( const idMapE
 	}
 
 	// write file id and version
-	fp->WriteFloatString( "%s \"%s\"\n\n", CM_FILEID, CM_FILEVERSION );
+	fprintf(fp, "%s \"%s\"\n\n", CM_FILEID, CM_FILEVERSION );
 	// write the map file crc
-	fp->WriteFloatString( "%u\n\n", 0 );
+	fprintf(fp, "%u\n\n", 0 );
 
 	// write the collision model
 	WriteCollisionModel( fp, model );
 
-	fileSystem->CloseFile( fp );
+	fclose( fp );
 
 	if ( testTraceModel ) {
 		idTraceModel trm;
