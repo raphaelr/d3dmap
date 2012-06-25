@@ -224,10 +224,6 @@ int main( int argc, char** argv ) {
 	idLib::common = common;
 	idLib::sys = sys;
 
-	idLib::Init();
-	declManager->Init();
-	R_InitTriSurfData();
-
 	DmapCmdLine dmap(argc, argv);
 	dmap.run();
 

@@ -58,6 +58,10 @@ DmapCmdLine::DmapCmdLine(int argc, char **argv)
 void DmapCmdLine::run()
 {
 	if(!argsOk) return help(exename);
+
+	idLib::Init();
+	declManager->Init();
+	R_InitTriSurfData();
 	Dmap(dmapArgs);
 }
 
